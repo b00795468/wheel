@@ -203,7 +203,14 @@ final class WheelController {
         setHoveredSlot(nil)
         guard let model else { return }
         titleView.setMode(model.mode, title: model.title, triggers: SettingsStore.triggers)
-        wheelView.setItems(model.items, emptyMessage: model.mode.emptyMessage)
+        let triggers = SettingsStore.triggers
+        var emptyMessage = model.mode.emptyMessage
+        if model.mode != .actions {
+            // §5.2: when nothing applies, the Actions wheel stays one tap away.
+            emptyMessage += "\n\(triggers.key(for: .actions).glyph)\u{00A0}\(WheelMode.actions.title) reste disponible"
+        }
+        wheelView.setItems(model.items, emptyMessage: emptyMessage)
+        Announcer.say(model.items.isEmpty ? model.mode.emptyMessage : "\(model.title), \(model.items.count) choix")
     }
 
     /// Panel origin putting the wheel centre on `point`, kept inside the
@@ -242,6 +249,7 @@ final class WheelController {
         guard let slot, let model else { return }
 
         NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+        Announcer.say("\(model.items[slot].title), \(slot + 1) sur \(model.items.count)")
         if !keyboardMode, let navigation = navigation(for: model.items[slot]) {
             navigationTimer = Timer.scheduledTimer(withTimeInterval: Self.pagingDelay, repeats: false) { _ in
                 MainActor.assumeIsolated { self.navigate(navigation) }

@@ -56,7 +56,7 @@ final class WheelModelTests: XCTestCase {
 
         model.open(parent(children: 4))
 
-        XCTAssertEqual(model.title, "Redimensionner")
+        XCTAssertEqual(model.title, "Outils › Redimensionner")
         XCTAssertEqual(ids(model.items), ["s0", "s1", "s2", "s3", "back"])
         model.goBack()
         XCTAssertEqual(ids(model.items), ["c", "group"])
@@ -85,5 +85,11 @@ final class WheelModelTests: XCTestCase {
         XCTAssertEqual(WheelModel.step(from: 0, count: 4, forward: false), 3)
         XCTAssertEqual(WheelModel.step(from: 1, count: 4, forward: true), 2)
         XCTAssertNil(WheelModel.step(from: nil, count: 0, forward: true))
+    }
+
+    func testItemTitles() {
+        XCTAssertEqual(WheelItem.segment(WheelSegment(id: "a", title: "PNG", symbol: "photo")).title, "PNG")
+        XCTAssertEqual(WheelItem.more.title, "Plus…")
+        XCTAssertEqual(WheelItem.back.title, "Retour")
     }
 }

@@ -21,8 +21,11 @@ final class WheelView: NSView {
     var highlightedSlot: Int? {
         didSet {
             guard highlightedSlot != oldValue else { return }
+            let next = highlightedSlot.map { ($0 + 1) % max(slotViews.count, 1) }
             for (index, view) in slotViews.enumerated() {
                 view.setHighlighted(index == highlightedSlot)
+                // No hairline along either edge of the hovered segment.
+                view.drawsSeparator = index != highlightedSlot && index != next
             }
         }
     }
@@ -51,7 +54,7 @@ final class WheelView: NSView {
         emptyLabel.textColor = .secondaryLabelColor
         emptyLabel.alignment = .center
         let ringMiddle = (WheelGeometry.innerRadius + WheelGeometry.outerRadius) / 2
-        emptyLabel.frame = NSRect(x: center.x - 80, y: center.y + ringMiddle - 17, width: 160, height: 34)
+        emptyLabel.frame = NSRect(x: center.x - 100, y: center.y + ringMiddle - 26, width: 200, height: 52)
         emptyLabel.isHidden = true
         addSubview(emptyLabel)
     }
@@ -60,6 +63,12 @@ final class WheelView: NSView {
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
     func setItems(_ items: [WheelItem], emptyMessage: String) {
+        if !slotViews.isEmpty, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion {
+            let fade = CATransition()
+            fade.type = .fade
+            fade.duration = Theme.swapDuration
+            layer?.add(fade, forKey: "swap")
+        }
         slotViews.forEach { $0.removeFromSuperview() }
         geometry = WheelGeometry(slotCount: items.count)
         slotViews = items.enumerated().map { index, item in
@@ -99,12 +108,18 @@ private final class WheelSlotView: NSView {
     private static let angularGap: CGFloat = 0.012
     private static let iconPointSize: CGFloat = 18
     private static let labelFont = NSFont.systemFont(ofSize: 11, weight: .medium)
+    /// Segments without a symbol (resize presets) show their label alone, larger.
+    private static let labelOnlyFont = NSFont.systemFont(ofSize: 13, weight: .semibold)
+    private static let maxLabelWidth: CGFloat = 116
 
     private let index: Int
     private let geometry: WheelGeometry
     private let icon = PassiveImageView()
     private let label = NSTextField(labelWithString: "")
     private var isHighlighted = false
+    var drawsSeparator = true {
+        didSet { if drawsSeparator != oldValue { needsDisplay = true } }
+    }
 
     init(frame: NSRect, item: WheelItem, index: Int, geometry: WheelGeometry) {
         self.index = index
@@ -118,12 +133,8 @@ private final class WheelSlotView: NSView {
         case .back: (WheelItem.backTitle, WheelItem.backSymbol)
         }
 
-        icon.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)?
-            .withSymbolConfiguration(.init(pointSize: Self.iconPointSize, weight: .medium))
         label.stringValue = title
-        label.font = Self.labelFont
         label.alignment = .center
-        label.maximumNumberOfLines = 2
         label.lineBreakMode = .byWordWrapping
         label.cell?.truncatesLastVisibleLine = true
 
@@ -131,10 +142,20 @@ private final class WheelSlotView: NSView {
         let anchor = geometry.point(inSlot: index, radius: midRadius)
         let center = CGPoint(x: bounds.midX + anchor.x, y: bounds.midY + anchor.y)
         let arcLength = geometry.slotAngle * midRadius
-        let labelWidth = min(arcLength * 0.85, 100)
-        icon.frame = NSRect(x: center.x - 14, y: center.y + 2, width: 28, height: 24)
-        label.frame = NSRect(x: center.x - labelWidth / 2, y: center.y - 28, width: labelWidth, height: 28)
-        addSubview(icon)
+        let labelWidth = min(arcLength * 0.85, Self.maxLabelWidth)
+        if symbol.isEmpty {
+            label.font = Self.labelOnlyFont
+            label.maximumNumberOfLines = 1
+            label.frame = NSRect(x: center.x - labelWidth / 2, y: center.y - 9, width: labelWidth, height: 18)
+        } else {
+            icon.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)?
+                .withSymbolConfiguration(.init(pointSize: Self.iconPointSize, weight: .medium))
+            icon.frame = NSRect(x: center.x - 14, y: center.y + 2, width: 28, height: 24)
+            addSubview(icon)
+            label.font = Self.labelFont
+            label.maximumNumberOfLines = 2
+            label.frame = NSRect(x: center.x - labelWidth / 2, y: center.y - 28, width: labelWidth, height: 28)
+        }
         addSubview(label)
         applyColors()
     }
@@ -181,12 +202,12 @@ private final class WheelSlotView: NSView {
                 from: geometry.midAngle(ofSlot: index) - half + Self.angularGap,
                 to: geometry.midAngle(ofSlot: index) + half - Self.angularGap
             )
-            Theme.accent.setFill()
+            Theme.accentStrong.setFill()
             path.fill()
         }
 
         // Each slot draws the separator at its own start edge.
-        guard geometry.slotCount > 1 else { return }
+        guard drawsSeparator, geometry.slotCount > 1 else { return }
         let start = geometry.midAngle(ofSlot: index) - half
         let separator = NSBezierPath()
         separator.move(to: Self.point(center, WheelGeometry.innerRadius, start))
@@ -226,11 +247,11 @@ private final class WheelCenterView: NSView {
 
     override init(frame: NSRect) {
         super.init(frame: frame)
-        name.font = .systemFont(ofSize: 10)
+        name.font = .systemFont(ofSize: 11)
         name.textColor = .secondaryLabelColor
         name.alignment = .center
         name.lineBreakMode = .byTruncatingMiddle
-        count.font = .systemFont(ofSize: 10, weight: .semibold)
+        count.font = .systemFont(ofSize: 11, weight: .semibold)
         count.textColor = .secondaryLabelColor
         count.alignment = .center
         [icon, name, count].forEach(addSubview)
@@ -304,7 +325,7 @@ final class WheelTitleView: NSView {
                 string: "  " + triggers.key(for: other).glyph,
                 attributes: [
                     .font: NSFont.systemFont(ofSize: 11, weight: current ? .semibold : .regular),
-                    .foregroundColor: current ? NSColor.labelColor : NSColor.tertiaryLabelColor,
+                    .foregroundColor: current ? NSColor.labelColor : NSColor.secondaryLabelColor,
                 ]
             ))
         }

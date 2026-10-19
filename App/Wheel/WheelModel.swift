@@ -82,6 +82,14 @@ enum WheelItem: Equatable {
     static let moreSymbol = "ellipsis"
     static let backTitle = "Retour"
     static let backSymbol = "chevron.backward"
+
+    var title: String {
+        switch self {
+        case .segment(let segment): segment.title
+        case .more: Self.moreTitle
+        case .back: Self.backTitle
+        }
+    }
 }
 
 /// Segments of the current wheel or sub-wheel, split into pages of at
@@ -101,7 +109,7 @@ struct WheelModel: Equatable {
         self.segments = segments
     }
 
-    var title: String { parent?.title ?? mode.title }
+    var title: String { parent.map { "\(mode.title) › \($0.title)" } ?? mode.title }
 
     private var current: [WheelSegment] { parent?.children ?? segments }
     /// Slots taken by navigation: "Retour" in a sub-wheel.
