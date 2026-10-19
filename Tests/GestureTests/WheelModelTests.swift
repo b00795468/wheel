@@ -10,6 +10,7 @@ final class WheelModelTests: XCTestCase {
             switch item {
             case .segment(let segment): segment.id
             case .more: "more"
+            case .back: "back"
             }
         }
     }
@@ -50,5 +51,37 @@ final class WheelModelTests: XCTestCase {
         XCTAssertEqual(WheelMode.mode(for: .command), .tools)
         XCTAssertEqual(WheelMode.mode(for: .control), .actions)
         XCTAssertNil(WheelMode.mode(for: .option))
+    }
+
+    private func parent(children count: Int) -> WheelSegment {
+        WheelSegment(id: "group", title: "Redimensionner", symbol: "aspectratio", children: segments(count))
+    }
+
+    func testOpeningAGroupShowsItsChildrenAndBack() {
+        var model = WheelModel(mode: .tools, segments: [WheelSegment(id: "c", title: "C", symbol: "circle"), parent(children: 4)])
+        XCTAssertEqual(model.title, "Outils")
+
+        model.open(parent(children: 4))
+
+        XCTAssertEqual(model.title, "Redimensionner")
+        XCTAssertEqual(ids(model.items), ["s0", "s1", "s2", "s3", "back"])
+        model.goBack()
+        XCTAssertEqual(ids(model.items), ["c", "group"])
+        XCTAssertEqual(model.title, "Outils")
+    }
+
+    func testALeafSegmentDoesNotOpen() {
+        var model = WheelModel(mode: .tools, segments: segments(2))
+        model.open(segments(1)[0])
+        XCTAssertNil(model.parent)
+    }
+
+    func testABigSubWheelPagesAndKeepsBack() {
+        var model = WheelModel(mode: .tools, segments: [parent(children: 10)])
+        model.open(parent(children: 10))
+
+        XCTAssertEqual(ids(model.items), ["s0", "s1", "s2", "s3", "s4", "s5", "more", "back"])
+        model.nextPage()
+        XCTAssertEqual(ids(model.items), ["s6", "s7", "s8", "s9", "more", "back"])
     }
 }

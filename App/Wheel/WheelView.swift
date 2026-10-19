@@ -115,6 +115,7 @@ private final class WheelSlotView: NSView {
         let (title, symbol): (String, String) = switch item {
         case .segment(let segment): (segment.title, segment.symbol)
         case .more: (WheelItem.moreTitle, WheelItem.moreSymbol)
+        case .back: (WheelItem.backTitle, WheelItem.backSymbol)
         }
 
         icon.image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)?

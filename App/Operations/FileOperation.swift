@@ -10,6 +10,13 @@ struct OperationContext: Sendable {
     var ffmpeg: FFmpegRunner? = nil
 }
 
+/// Operations shown together behind one segment that opens a sub-wheel.
+struct OperationGroup: Equatable, Sendable {
+    let id: String
+    let title: String
+    let symbol: String
+}
+
 /// One segment of a wheel. Adding a format means adding an operation to
 /// `OperationRegistry.standard`, without touching the wheel (§4).
 protocol FileOperation: Sendable {
@@ -20,6 +27,8 @@ protocol FileOperation: Sendable {
     var symbol: String { get }
     /// Long-running ffmpeg work, limited to a few concurrent jobs (§5.6).
     var usesMediaEngine: Bool { get }
+    /// Groups this operation with others behind a sub-wheel segment.
+    var group: OperationGroup? { get }
     /// Whether the operation applies to files of all these types at once.
     func accepts(_ types: [UTType]) -> Bool
     /// Runs off the main thread. Returns the created files or folders.
@@ -30,6 +39,7 @@ protocol FileOperation: Sendable {
 extension FileOperation {
     var segment: WheelSegment { WheelSegment(id: id, title: title, symbol: symbol) }
     var usesMediaEngine: Bool { false }
+    var group: OperationGroup? { nil }
 }
 
 /// A failure the HUD can show as is: French, human, no jargon (§5.6).

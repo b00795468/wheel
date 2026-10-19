@@ -20,6 +20,25 @@ struct OperationRegistry: Sendable {
         return operations.filter { $0.kind == kind && $0.accepts(types) }
     }
 
+    /// Wheel segments for `files`, in registry order: operations sharing a
+    /// group become one segment whose children open as a sub-wheel.
+    func segments(for files: [URL], kind: WheelMode) -> [WheelSegment] {
+        var segments: [WheelSegment] = []
+        for operation in operations(for: files, kind: kind) {
+            guard let group = operation.group else {
+                segments.append(operation.segment)
+                continue
+            }
+            if let index = segments.firstIndex(where: { $0.id == group.id }) {
+                segments[index].children.append(operation.segment)
+            } else {
+                segments.append(WheelSegment(id: group.id, title: group.title, symbol: group.symbol,
+                                             children: [operation.segment]))
+            }
+        }
+        return segments
+    }
+
     func operation(withID id: String) -> (any FileOperation)? {
         operations.first { $0.id == id }
     }

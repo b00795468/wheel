@@ -35,50 +35,77 @@ enum WheelMode: CaseIterable {
     }
 }
 
-/// One choice on the wheel.
+/// One choice on the wheel. A segment with children opens them as a
+/// sub-wheel when hovered, instead of accepting the drop (§5.4).
 struct WheelSegment: Equatable {
     let id: String
     let title: String
     let symbol: String
+    var children: [WheelSegment] = []
 }
 
-/// What a slot of the ring shows: a segment, or the "more" pager.
+/// What a slot of the ring shows: a segment, the "more" pager, or the way
+/// back from a sub-wheel.
 enum WheelItem: Equatable {
     case segment(WheelSegment)
     case more
+    case back
 
     static let moreTitle = "Plus…"
     static let moreSymbol = "ellipsis"
+    static let backTitle = "Retour"
+    static let backSymbol = "chevron.backward"
 }
 
-/// Segments of the current wheel, split into pages of at most
-/// `maxItemsPerPage` slots. When paging is needed, the last slot of every
-/// page is `.more`, which cycles to the next page.
+/// Segments of the current wheel or sub-wheel, split into pages of at
+/// most `maxItemsPerPage` slots. A sub-wheel always ends with `.back`;
+/// when paging is needed, `.more` cycles to the next page.
 struct WheelModel: Equatable {
     static let maxItemsPerPage = 8
 
     let mode: WheelMode
     let segments: [WheelSegment]
     private(set) var page = 0
+    /// The segment whose sub-wheel is shown, nil on the main wheel.
+    private(set) var parent: WheelSegment?
 
     init(mode: WheelMode, segments: [WheelSegment]) {
         self.mode = mode
         self.segments = segments
     }
 
-    private var needsPaging: Bool { segments.count > Self.maxItemsPerPage }
-    private var segmentsPerPage: Int { needsPaging ? Self.maxItemsPerPage - 1 : Self.maxItemsPerPage }
+    var title: String { parent?.title ?? mode.title }
 
-    var pageCount: Int { max(1, (segments.count + segmentsPerPage - 1) / segmentsPerPage) }
+    private var current: [WheelSegment] { parent?.children ?? segments }
+    /// Slots taken by navigation: "Retour" in a sub-wheel.
+    private var reservedSlots: Int { parent == nil ? 0 : 1 }
+    private var needsPaging: Bool { current.count > Self.maxItemsPerPage - reservedSlots }
+    private var segmentsPerPage: Int { Self.maxItemsPerPage - reservedSlots - (needsPaging ? 1 : 0) }
+
+    var pageCount: Int { max(1, (current.count + segmentsPerPage - 1) / segmentsPerPage) }
 
     var items: [WheelItem] {
         let start = page * segmentsPerPage
-        let end = min(start + segmentsPerPage, segments.count)
-        let pageItems = segments[start..<end].map(WheelItem.segment)
-        return needsPaging ? pageItems + [.more] : pageItems
+        let end = min(start + segmentsPerPage, current.count)
+        var items = current[start..<end].map(WheelItem.segment)
+        if needsPaging { items.append(.more) }
+        if parent != nil { items.append(.back) }
+        return items
     }
 
     mutating func nextPage() {
         page = (page + 1) % pageCount
+    }
+
+    /// Shows the children of `segment` in place of the main wheel.
+    mutating func open(_ segment: WheelSegment) {
+        guard !segment.children.isEmpty else { return }
+        parent = segment
+        page = 0
+    }
+
+    mutating func goBack() {
+        parent = nil
+        page = 0
     }
 }
