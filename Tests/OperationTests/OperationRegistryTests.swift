@@ -86,4 +86,15 @@ final class OperationRegistryTests: XCTestCase {
         XCTAssertEqual(registry.operation(withID: "convert.webp")?.usesMediaEngine, false)
         XCTAssertEqual(registry.operation(withID: "convert.png")?.usesMediaEngine, false)
     }
+
+    func testResizeIsOneSegmentWithFourPresets() {
+        let segments = registry.segments(for: [URL(fileURLWithPath: "/tmp/a.png")], kind: .tools)
+        XCTAssertEqual(segments.map(\.id), ["tool.compress", "tool.resize"])
+        XCTAssertEqual(segments[1].title, "Redimensionner")
+        XCTAssertEqual(segments[1].children.map(\.id),
+                       ["tool.resize.50", "tool.resize.1920", "tool.resize.1280", "tool.resize.800"])
+        XCTAssertEqual(ids(["a.bmp"], .tools), ["tool.resize.50", "tool.resize.1920", "tool.resize.1280", "tool.resize.800"])
+        XCTAssertTrue(ids(["a.mov"], .tools).contains("tool.resize.800"))
+        XCTAssertFalse(ids(["a.pdf"], .tools).contains("tool.resize.800"))
+    }
 }

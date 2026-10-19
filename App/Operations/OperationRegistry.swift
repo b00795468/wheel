@@ -15,6 +15,7 @@ struct OperationRegistry: Sendable {
         ]
         operations += MediaOutput.allCases.map { MediaConvertOperation(output: $0) as any FileOperation }
         operations.append(CompressOperation())
+        operations += ResizePreset.allCases.map { ResizeOperation(preset: $0) as any FileOperation }
         return OperationRegistry(operations: operations)
     }()
 

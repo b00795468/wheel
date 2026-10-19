@@ -50,6 +50,16 @@ enum ImageConverter {
         return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
     }
 
+    /// First image, upright, downscaled so that its longer side is `maxPixelSize`.
+    static func downscaledImage(from source: CGImageSource, maxPixelSize: Int) -> CGImage? {
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
     /// Metadata worth keeping (EXIF, IPTC, TIFF, GPS, resolution), with the
     /// orientation reset since `uprightImage` already applied it.
     static func metadata(of source: CGImageSource, stripsLocation: Bool) -> [CFString: Any] {
