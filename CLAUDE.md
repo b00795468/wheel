@@ -4,7 +4,7 @@
 - Build : `scripts/build.sh [Debug|Release]` (XcodeGen + xcodebuild). Lancer : `open build/Build/Products/Debug/Pivot.app`.
 - Tests unitaires : `scripts/test.sh` (cible PivotTests sans app hôte).
 - Debug sans drag : `open -n Pivot.app --args -debugWheel convert|tools|actions [-debugSlot N] [-debugSnapshot out.png]` (rendu hors écran : sans matériau HUD ni échelle de survol).
-- Signature ad hoc ⇒ l’autorisation Accessibilité saute à chaque build : `tccutil reset Accessibility local.pivot.app`, relancer, réautoriser.
+- Signature : `build.sh` signe avec le certificat local auto-signé « Pivot Dev » s’il existe (l’autorisation Accessibilité survit alors aux builds), sinon en ad hoc (à réautoriser après chaque build : `tccutil reset Accessibility local.pivot.app`). Écart assumé au §3, validé par Raphaël.
 - Réponds-moi en français ; code et commentaires en anglais.
 - À la fin de chaque phase : compiler, lancer, vérifier, commit, mettre à jour l'état ci-dessous, puis attendre mon « go ».
 
