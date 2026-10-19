@@ -5,9 +5,8 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = SettingsModel()
     private lazy var settingsWindow = SettingsWindowController(model: settings)
-    private lazy var onboardingWindow = OnboardingWindowController(model: settings) { [weak self] launchAtLogin in
-        self?.finishOnboarding(launchAtLogin: launchAtLogin)
-    }
+    /// Built anew each time, so a replay starts again at the first screen.
+    private var onboardingWindow: OnboardingWindowController?
     private let gestures = GestureCoordinator()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -33,18 +32,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // The app has no Dock or menu bar icon: the first launch shows the
         // onboarding (§5.7), later launches stay silent unless a permission is missing.
+        settings.onReplayOnboarding = { [weak self] in
+            self?.settingsWindow.close()
+            self?.showOnboarding()
+        }
         if !SettingsStore.hasCompletedOnboarding {
-            onboardingWindow.show()
+            showOnboarding()
         } else if !trusted {
             PermissionsManager.requestAccessibility()
         }
     }
 
+    private func showOnboarding() {
+        let controller = OnboardingWindowController(model: settings) { [weak self] launchAtLogin in
+            self?.finishOnboarding(launchAtLogin: launchAtLogin)
+        }
+        onboardingWindow = controller
+        controller.show()
+    }
+
+    /// The app has no visible presence: a pill confirms it is ready (§5.7).
     private func finishOnboarding(launchAtLogin: Bool) {
         SettingsStore.hasCompletedOnboarding = true
         LoginItem.setEnabled(launchAtLogin)
         settings.refreshPermissions()
-        onboardingWindow.close()
+        onboardingWindow?.close()
+        onboardingWindow = nil
+        let key = SettingsStore.triggers.key(for: .convert).name
+        gestures.inform("\(AppInfo.name) est prêt\u{202F}: glissez un fichier, puis appuyez brièvement sur \(key).",
+                        symbol: "checkmark.circle")
     }
 
     /// Launching the app again (Finder, Spotlight, Launchpad) while it is

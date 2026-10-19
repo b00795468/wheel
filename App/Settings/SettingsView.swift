@@ -54,6 +54,7 @@ struct SettingsView: View {
                 }
                 Section("Général") {
                     Toggle("Ouvrir au démarrage", isOn: $model.launchAtLogin)
+                    Button("Revoir la présentation") { model.onReplayOnboarding?() }
                     if model.loginNeedsApproval {
                         Text("À approuver dans Réglages Système › Général › Ouverture.")
                             .font(.caption)

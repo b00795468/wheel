@@ -52,15 +52,15 @@ struct OnboardingView: View {
     private var gesturePage: some View {
         VStack(spacing: 16) {
             GestureAnimationView()
-            Text("Glisser, taper, déposer").font(.title2.weight(.semibold))
-            Text("Commencez à glisser un fichier, tapez une touche\u{202F}: la roue s’ouvre autour du curseur. Lâchez le fichier sur une action.")
+            Text("Glisser, appuyer, déposer").font(.title2.weight(.semibold))
+            Text("Pendant que vous glissez un fichier, appuyez brièvement sur une touche\u{202F}: la roue s’ouvre autour du curseur. Lâchez le fichier sur une action.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-            HStack(spacing: 18) {
+            HStack(spacing: 28) {
                 ForEach(WheelMode.allCases, id: \.self) { mode in
-                    HStack(spacing: 6) {
-                        Text(model.triggers.key(for: mode).glyph).font(.headline)
-                        Text(mode.title)
+                    VStack(spacing: 2) {
+                        Text(model.triggers.key(for: mode).name).font(.headline)
+                        Text(mode.title).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -72,7 +72,7 @@ struct OnboardingView: View {
             Text("Autorisations").font(.title2.weight(.semibold))
             Text("macOS demande votre accord pour que \(AppInfo.name) voie le geste. L’état se met à jour tout seul.")
                 .foregroundStyle(.secondary)
-            PermissionRow(title: "Accessibilité", detail: "Indispensable\u{202F}: détecte la touche tapée pendant le glisser.",
+            PermissionRow(title: "Accessibilité", detail: "Indispensable\u{202F}: repère la touche appuyée pendant que vous glissez un fichier.",
                           status: model.accessibilityGranted ? .granted : .denied,
                           action: PermissionsManager.grantAccessibility)
             PermissionRow(title: "Contrôle du Finder", detail: "Facultatif\u{202F}: pour ouvrir la roue au clavier (\(model.hotKey.display)).",
@@ -84,6 +84,7 @@ struct OnboardingView: View {
             }
             Spacer()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var outputPage: some View {
@@ -103,5 +104,6 @@ struct OnboardingView: View {
                 .foregroundStyle(.secondary)
             Spacer()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

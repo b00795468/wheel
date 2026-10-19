@@ -50,6 +50,8 @@ final class SettingsModel: ObservableObject {
     @Published private(set) var loginNeedsApproval = LoginItem.needsApproval
 
     private var timer: Timer?
+    /// Shows the onboarding again ("Revoir la présentation").
+    var onReplayOnboarding: (() -> Void)?
 
     init() {
         destination = switch SettingsStore.outputDestination {
