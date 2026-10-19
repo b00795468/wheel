@@ -3,6 +3,7 @@
 - La spécification complète est dans `SPEC.md` : la lire au début de chaque session et la suivre (règles de travail §1, phases §9).
 - Build : `scripts/build.sh [Debug|Release]` (XcodeGen + xcodebuild). Lancer : `open build/Build/Products/Debug/Pivot.app`.
 - Tests unitaires : `scripts/test.sh` (cible PivotTests sans app hôte).
+- ffmpeg : `scripts/fetch-ffmpeg.sh` (appelé automatiquement par build.sh et test.sh) récupère le build martin-riedl.de 9.0.2 arm64 validé par Raphaël, SHA-256 épinglés, dans `Vendor/ffmpeg/` (non versionné) ; la phase de build « Embed ffmpeg » le copie dans `Contents/Resources/bin/` et le re-signe.
 - Debug sans drag : `open -n Pivot.app --args -debugWheel convert|tools|actions [-debugSlot N] [-debugSnapshot out.png] [-debugFiles '("/chemin")']` (rendu hors écran : sans matériau HUD ni échelle de survol) ; `-debugRun convert.png -debugFiles '("/chemin")'` exécute une opération comme après un drop.
 - Journal technique des échecs : `~/Library/Logs/Pivot/Pivot.log`. Vérifier les invites de confidentialité : `log show --predicate 'subsystem == "com.apple.TCC" AND eventMessage CONTAINS "pid=<PID>"'`.
 - Signature : `build.sh` signe avec le certificat local auto-signé « Pivot Dev » s’il existe (l’autorisation Accessibilité survit alors aux builds), sinon en ad hoc (à réautoriser après chaque build : `tccutil reset Accessibility local.pivot.app`). Écart assumé au §3, validé par Raphaël.
@@ -25,7 +26,8 @@
 | 1. Squelette | ✅ Compile (Debug), testée : lancement LSUIElement, Réglages au 1er lancement et à la réouverture (sur l’espace actif), bouton Quitter, CPU 0 % au repos |
 | 2. Geste + roue factice | ✅ Validée par Raphaël (geste réel, zones de drop sans zone morte) |
 | 3. Registre + images & PDF | ✅ Validée par Raphaël (58 tests, conversions réelles, checklist manuelle OK). Sortie WebP reportée en phase 4 (ImageIO ne l’encode pas) |
-| 4 à 8 | ⏳ Pas commencées |
+| 4. ffmpeg + audio/vidéo | 🟡 Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-4-ffmpeg-media.md`), 85 tests OK, conversions réelles via `-debugRun` (HEVC→MP4, GIF, MP3), ffmpeg arrêté à l’annulation et à la fermeture ; à valider : checklist manuelle (vrai drag, 3 vidéos en parallèle, grosse vidéo, invites) |
+| 5 à 8 | ⏳ Pas commencées |
 
 ## Décisions en attente
 
