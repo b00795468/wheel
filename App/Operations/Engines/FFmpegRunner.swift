@@ -97,7 +97,20 @@ struct FFmpegRunner: Sendable {
 
     /// Lets the cancellation handler reach the process.
     private final class ProcessBox: @unchecked Sendable {
+        /// SIGTERM lets ffmpeg finish the frame it is encoding, which can take
+        /// seconds on a busy machine; past this grace it is killed outright.
+        private static let killGrace: TimeInterval = 0.5
+
         let process = Process()
+
+        func stop() {
+            guard process.isRunning else { return }
+            process.terminate()
+            let pid = process.processIdentifier
+            DispatchQueue.global().asyncAfter(deadline: .now() + Self.killGrace) { [process] in
+                if process.isRunning { kill(pid, SIGKILL) }
+            }
+        }
     }
 
     /// Launches `executable` and waits for it. Cancelling the task terminates it.
@@ -133,10 +146,10 @@ struct FFmpegRunner: Sendable {
                     return
                 }
                 // Cancelled before the process existed: the handler could not stop it.
-                if Task.isCancelled { process.terminate() }
+                if Task.isCancelled { box.stop() }
             }
         } onCancel: {
-            if box.process.isRunning { box.process.terminate() }
+            box.stop()
         }
 
         output.fileHandleForReading.readabilityHandler = nil
