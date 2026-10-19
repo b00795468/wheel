@@ -29,7 +29,7 @@
 | 3. Registre + images & PDF | ✅ Validée par Raphaël (58 tests, conversions réelles, checklist manuelle OK). Sortie WebP reportée en phase 4 (ImageIO ne l’encode pas) |
 | 4. ffmpeg + audio/vidéo | ✅ Go donné par Raphaël (85 tests, conversions réelles HEVC→MP4/GIF/MP3, ffmpeg arrêté à l’annulation et à la fermeture) |
 | 5. Outils + Actions | ✅ Go donné par Raphaël. Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-5-tools-actions.md`), 111 tests OK, essais réels (compression vidéo HEVC 1080p, redimensionnement, copie de chemin). Décisions : format conservé, jamais d’agrandissement, compression refusée si pas plus petite, BMP hors « Compresser », PDF via le filtre système « Reduce File Size » (les options PDFKit n’ont aucun effet ; liens/annotations perdus). |
-| 6. Onboarding, Réglages, clavier | 🟡 Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-6-settings-onboarding-keyboard.md`), 121 tests OK ; mode clavier testé avec de vraies touches (→ puis Entrée, Échap) ; onboarding vérifié au premier lancement ; CPU 0 % au repos. Écart : « Surveillance de l’entrée » non demandée (jamais requise, mesuré). À valider : checklist manuelle |
+| 6. Onboarding, Réglages, clavier | ✅ Validée par Raphaël (checklist OK). Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-6-settings-onboarding-keyboard.md`), 121 tests OK ; mode clavier testé avec de vraies touches (→ puis Entrée, Échap) ; onboarding vérifié au premier lancement ; CPU 0 % au repos. Écart : « Surveillance de l’entrée » non demandée (jamais requise, mesuré). |
 | 7 à 8 | ⏳ Pas commencées |
 
 ## Décisions en attente
