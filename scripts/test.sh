@@ -14,11 +14,13 @@ if [ ! -x Vendor/ffmpeg/ffmpeg ] || [ ! -x Vendor/ffmpeg/ffprobe ]; then
   scripts/fetch-ffmpeg.sh
 fi
 
+source scripts/signing.sh
+
 xcodegen generate --quiet
 mkdir -p build
 LOG=build/xcodebuild-test.log
 if ! xcodebuild -project Pivot.xcodeproj -scheme Pivot \
-  -derivedDataPath build -destination 'platform=macOS,arch=arm64' test >"$LOG" 2>&1; then
+  -derivedDataPath build -destination 'platform=macOS,arch=arm64' ${SIGN_ARGS[@]+"${SIGN_ARGS[@]}"} test >"$LOG" 2>&1; then
   grep -E 'error:|failed' "$LOG" | sort -u >&2
   echo "TESTS FAILED (log complet : $LOG)" >&2
   exit 1

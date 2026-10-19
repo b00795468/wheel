@@ -10,15 +10,7 @@ if ! command -v xcodegen >/dev/null; then
   exit 1
 fi
 
-# A stable local identity keeps privacy permissions (Accessibility) across
-# rebuilds; ad hoc signatures change on every build and macOS forgets them.
-SIGN_IDENTITY="Pivot Dev"
-if security find-certificate -c "$SIGN_IDENTITY" >/dev/null 2>&1; then
-  SIGN_ARGS=(CODE_SIGN_IDENTITY="$SIGN_IDENTITY")
-else
-  echo "Certificat « $SIGN_IDENTITY » absent : signature ad hoc (Accessibilité à réautoriser après chaque build)." >&2
-  SIGN_ARGS=()
-fi
+source scripts/signing.sh
 
 # ffmpeg is embedded in the app and used by the tests (§3).
 if [ ! -x Vendor/ffmpeg/ffmpeg ] || [ ! -x Vendor/ffmpeg/ffprobe ]; then

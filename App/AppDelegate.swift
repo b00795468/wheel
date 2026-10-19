@@ -5,32 +5,43 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let settings = SettingsModel()
     private lazy var settingsWindow = SettingsWindowController(model: settings)
+    private lazy var onboardingWindow = OnboardingWindowController(model: settings) { [weak self] launchAtLogin in
+        self?.finishOnboarding(launchAtLogin: launchAtLogin)
+    }
     private let gestures = GestureCoordinator()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppInfo.log.info("Launched \(AppInfo.name, privacy: .public) \(AppInfo.version, privacy: .public)")
 
-        // Without Accessibility, modifier taps and Escape in other apps are
-        // invisible to us. Proper onboarding replaces this prompt in phase 6.
         let trusted = PermissionsManager.isAccessibilityTrusted
         AppInfo.log.info("Accessibility trusted: \(trusted, privacy: .public)")
-        if !trusted {
-            PermissionsManager.requestAccessibility()
-        }
         gestures.start()
         #if DEBUG
         gestures.performDebugLaunchArguments()
         if let path = UserDefaults.standard.string(forKey: "debugSettingsSnapshot") {
             DebugSnapshot.render(SettingsView(model: settings), size: CGSize(width: 520, height: 660), to: path)
         }
+        if let path = UserDefaults.standard.string(forKey: "debugOnboardingSnapshot") {
+            let page = UserDefaults.standard.integer(forKey: "debugOnboardingPage")
+            DebugSnapshot.render(OnboardingView(model: settings, page: page) { _ in },
+                                 size: CGSize(width: 560, height: 470), to: path)
+        }
         #endif
 
-        // The app has no Dock or menu bar icon: show Settings once so the
-        // first launch is not silent. Onboarding replaces this in phase 6.
+        // The app has no Dock or menu bar icon: the first launch shows the
+        // onboarding (§5.7), later launches stay silent unless a permission is missing.
         if !SettingsStore.hasCompletedOnboarding {
-            SettingsStore.hasCompletedOnboarding = true
-            settingsWindow.show()
+            onboardingWindow.show()
+        } else if !trusted {
+            PermissionsManager.requestAccessibility()
         }
+    }
+
+    private func finishOnboarding(launchAtLogin: Bool) {
+        SettingsStore.hasCompletedOnboarding = true
+        LoginItem.setEnabled(launchAtLogin)
+        settings.refreshPermissions()
+        onboardingWindow.close()
     }
 
     /// Launching the app again (Finder, Spotlight, Launchpad) while it is
