@@ -29,6 +29,8 @@ protocol FileOperation: Sendable {
     var usesMediaEngine: Bool { get }
     /// Groups this operation with others behind a sub-wheel segment.
     var group: OperationGroup? { get }
+    /// Text of the confirmation pill, nil for none (the action shows its own result).
+    func completionMessage(inputs: [URL], outputs: [URL]) -> String?
     /// Whether the operation applies to files of all these types at once.
     func accepts(_ types: [UTType]) -> Bool
     /// Runs off the main thread. Returns the created files or folders.
@@ -40,6 +42,10 @@ extension FileOperation {
     var segment: WheelSegment { WheelSegment(id: id, title: title, symbol: symbol) }
     var usesMediaEngine: Bool { false }
     var group: OperationGroup? { nil }
+
+    func completionMessage(inputs: [URL], outputs: [URL]) -> String? {
+        outputs.count == 1 ? "\(outputs[0].lastPathComponent) créé" : "\(outputs.count) fichiers créés"
+    }
 }
 
 /// A failure the HUD can show as is: French, human, no jargon (§5.6).

@@ -23,8 +23,8 @@ final class HUDController {
         return toast
     }
 
-    func succeed(_ toast: HUDToast, outputs: [URL]) {
-        toast.showSuccess(outputs: outputs)
+    func succeed(_ toast: HUDToast, message: String, outputs: [URL], symbol: String) {
+        toast.showSuccess(message: message, outputs: outputs, symbol: symbol)
         present(toast)
         remove(toast, after: Self.successDuration)
     }
@@ -109,12 +109,12 @@ final class HUDToast {
         content.setProgress(fraction)
     }
 
-    func showSuccess(outputs: [URL]) {
+    func showSuccess(message: String, outputs: [URL], symbol: String) {
         isRunning = false
         self.outputs = outputs
-        let text = outputs.count == 1 ? "\(outputs[0].lastPathComponent) créé" : "\(outputs.count) fichiers créés"
         let icon = outputs.first.map { NSWorkspace.shared.icon(forFile: $0.path) }
-        content.configure(icon: icon, tint: nil, text: text, progress: nil)
+            ?? NSImage(systemSymbolName: symbol, accessibilityDescription: message)
+        content.configure(icon: icon, tint: outputs.isEmpty ? .labelColor : nil, text: message, progress: nil)
     }
 
     func showFailure(message: String) {

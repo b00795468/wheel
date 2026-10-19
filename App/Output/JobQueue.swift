@@ -73,8 +73,12 @@ final class JobQueue {
         case .success(let outputs):
             let paths = outputs.map(\.path).joined(separator: ", ")
             AppInfo.jobLog.info("Job \(operation.id, privacy: .public) done: \(paths, privacy: .public)")
-            hud.succeed(toast, outputs: outputs)
-            if SettingsStore.playsCompletionSound {
+            if let message = operation.completionMessage(inputs: inputs, outputs: outputs) {
+                hud.succeed(toast, message: message, outputs: outputs, symbol: operation.symbol)
+            } else {
+                hud.cancel(toast)
+            }
+            if !outputs.isEmpty, SettingsStore.playsCompletionSound {
                 AudioServicesPlaySystemSound(Self.completionSound)
             }
         case .failure(let error) where error is CancellationError:

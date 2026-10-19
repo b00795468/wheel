@@ -97,4 +97,11 @@ final class OperationRegistryTests: XCTestCase {
         XCTAssertTrue(ids(["a.mov"], .tools).contains("tool.resize.800"))
         XCTAssertFalse(ids(["a.pdf"], .tools).contains("tool.resize.800"))
     }
+
+    func testActionsAreOfferedForEverythingAndFoldersGetOnlyActions() {
+        let actions = ["action.copyPath", "action.reveal", "action.airdrop"]
+        XCTAssertEqual(ids(["Vacances/"], .actions), actions)
+        XCTAssertEqual(ids(["a.png", "Vacances/", "notes.txt"], .actions), actions)
+        XCTAssertEqual(ids(["Vacances/"], .convert) + ids(["Vacances/"], .tools), [])
+    }
 }
