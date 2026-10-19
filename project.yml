@@ -76,6 +76,7 @@ targets:
       - App/Theme.swift
       - App/Operations
       - App/Output/OutputLocator.swift
+      - App/Output/AsyncSemaphore.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: local.pivot.tests

@@ -1300,7 +1300,8 @@ final class AsyncSemaphoreTests: XCTestCase {
         let released = Date()
         await semaphore.signal()
 
-        XCTAssertGreaterThanOrEqual(try await third.value, released)
+        let acquired = try await third.value
+        XCTAssertGreaterThanOrEqual(acquired, released)
     }
 
     func testACancelledWaiterLeavesTheQueue() async throws {
@@ -1346,7 +1347,7 @@ actor AsyncSemaphore {
         }
         let id = UUID()
         try await withTaskCancellationHandler {
-            try await withCheckedThrowingContinuation { continuation in
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
                 if Task.isCancelled {
                     continuation.resume(throwing: CancellationError())
                 } else {

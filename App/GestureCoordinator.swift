@@ -64,6 +64,11 @@ final class GestureCoordinator {
         jobs.run(operation, inputs: files)
     }
 
+    /// Called when the app quits, so no ffmpeg keeps running orphaned.
+    func cancelAllJobs() {
+        jobs.cancelAll()
+    }
+
     private func fileDragEnded() {
         guard wheel.isVisible else { return }
         guard wheel.isDragInside else {
