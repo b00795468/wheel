@@ -27,7 +27,7 @@
 | 2. Geste + roue factice | ✅ Validée par Raphaël (geste réel, zones de drop sans zone morte) |
 | 3. Registre + images & PDF | ✅ Validée par Raphaël (58 tests, conversions réelles, checklist manuelle OK). Sortie WebP reportée en phase 4 (ImageIO ne l’encode pas) |
 | 4. ffmpeg + audio/vidéo | ✅ Go donné par Raphaël (85 tests, conversions réelles HEVC→MP4/GIF/MP3, ffmpeg arrêté à l’annulation et à la fermeture) |
-| 5. Outils + Actions | 🟡 Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-5-tools-actions.md`), 111 tests OK, essais réels (compression vidéo HEVC 1080p, redimensionnement, copie de chemin). Décisions : format conservé, jamais d’agrandissement, compression refusée si pas plus petite, BMP hors « Compresser », PDF via le filtre système « Reduce File Size » (les options PDFKit n’ont aucun effet ; liens/annotations perdus). À valider : checklist manuelle (vrai drag, sous-roue, AirDrop) |
+| 5. Outils + Actions | ✅ Go donné par Raphaël. Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-5-tools-actions.md`), 111 tests OK, essais réels (compression vidéo HEVC 1080p, redimensionnement, copie de chemin). Décisions : format conservé, jamais d’agrandissement, compression refusée si pas plus petite, BMP hors « Compresser », PDF via le filtre système « Reduce File Size » (les options PDFKit n’ont aucun effet ; liens/annotations perdus). |
 | 6 à 8 | ⏳ Pas commencées |
 
 ## Décisions en attente
