@@ -35,6 +35,6 @@
 
 ## Décisions prises
 
-- Nom : Pivot. Accent : terracotta `#D9663F` ; `#B8532F` (même teinte) sous le texte blanc du segment survolé (contraste 4,87:1).
+- Nom : Pivot. Accent : `#F0F1F1` (choix de Raphaël, couleur préférée de son frère ; écart au §6 « chaude ») avec texte `#1D1D1F` dessus (14,9:1). La roue et les pastilles restent toujours en apparence sombre (`Theme.hudAppearance`), même en mode clair ; l’animation d’onboarding est sur un fond sombre ; le bouton « Autoriser… » garde l’accent système.
 - Formats de la roue Convertir en libellés seuls ; noms de fichiers de sortie avec espaces ordinaires (pas d’insécables).
 - « Afficher dans le Finder » : espace insécable avant « Finder », le libellé reste dans l’anneau (mesuré à 7,8 pt du bord).

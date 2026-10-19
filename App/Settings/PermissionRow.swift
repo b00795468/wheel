@@ -24,8 +24,8 @@ struct PermissionRow: View {
             } else {
                 if prominent {
                     Button("Autoriser…", action: action)
+                        // System accent: the near-white brand accent would be unreadable on a button.
                         .buttonStyle(.borderedProminent)
-                        .tint(Theme.accentColor)
                         .keyboardShortcut(.defaultAction)
                 } else {
                     Button("Autoriser…", action: action)

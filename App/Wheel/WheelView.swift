@@ -187,7 +187,7 @@ private final class WheelSlotView: NSView {
     }
 
     private func applyColors() {
-        let color: NSColor = isHighlighted ? .white : .labelColor
+        let color: NSColor = isHighlighted ? Theme.onAccent : .labelColor
         icon.contentTintColor = color
         label.textColor = color
     }
@@ -202,7 +202,7 @@ private final class WheelSlotView: NSView {
                 from: geometry.midAngle(ofSlot: index) - half + Self.angularGap,
                 to: geometry.midAngle(ofSlot: index) + half - Self.angularGap
             )
-            Theme.accentStrong.setFill()
+            Theme.accent.setFill()
             path.fill()
         }
 

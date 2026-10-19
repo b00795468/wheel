@@ -319,7 +319,7 @@ extension WheelController {
     /// Renders the panel content to a PNG. The behind-window material and
     /// layer transforms are not captured, only drawing and layout.
     func debugSnapshot(to url: URL) {
-        dropTarget.appearance = NSApp.effectiveAppearance
+        dropTarget.appearance = Theme.hudAppearance
         dropTarget.layoutSubtreeIfNeeded()
         guard let rep = dropTarget.bitmapImageRepForCachingDisplay(in: dropTarget.bounds) else { return }
         dropTarget.cacheDisplay(in: dropTarget.bounds, to: rep)

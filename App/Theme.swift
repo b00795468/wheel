@@ -3,12 +3,18 @@ import SwiftUI
 
 /// Visual constants shared by the wheel, the HUD and the onboarding.
 enum Theme {
-    /// The single warm accent (§6), terracotta: progress, onboarding.
-    static let accent = NSColor(srgbRed: 0xD9 / 255, green: 0x66 / 255, blue: 0x3F / 255, alpha: 1)
-    /// Same hue one step deeper, behind the hovered segment's white label:
-    /// about 4.9:1 where the lighter tone gives 3.55:1 (WCAG AA for 11 pt text).
-    static let accentStrong = NSColor(srgbRed: 0xB8 / 255, green: 0x53 / 255, blue: 0x2F / 255, alpha: 1)
+    /// The single accent, #F0F1F1, chosen by Raphaël (his brother's
+    /// favourite) instead of the SPEC's warm accent (§6). It is near white,
+    /// so it lives only on dark surfaces: the wheel and the pills always use
+    /// the dark appearance (`hudAppearance`), the onboarding draws its wheel
+    /// on a dark stage.
+    static let accent = NSColor(srgbRed: 0xF0 / 255, green: 0xF1 / 255, blue: 0xF1 / 255, alpha: 1)
+    /// Text and icons on the accent: 14.9:1.
+    static let onAccent = NSColor(srgbRed: 0x1D / 255, green: 0x1D / 255, blue: 0x1F / 255, alpha: 1)
     static let accentColor = Color(nsColor: accent)
+    /// The wheel and pills stay dark in light mode too, like a HUD, so the
+    /// near-white accent reads (12.5:1 on the dark material).
+    static let hudAppearance = NSAppearance(named: .darkAqua)
 
     static let appearDuration: TimeInterval = 0.14
     static let disappearDuration: TimeInterval = 0.10

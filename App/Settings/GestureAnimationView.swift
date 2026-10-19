@@ -26,6 +26,9 @@ struct GestureAnimationView: View {
             frame(at: time)
         }
         .frame(width: 260, height: 190)
+        // The real wheel is always dark (Theme.hudAppearance): so is its picture.
+        .background(RoundedRectangle(cornerRadius: 18).fill(Color(white: 0.16)))
+        .environment(\.colorScheme, .dark)
         .accessibilityLabel("Animation\u{202F}: glisser un fichier, appuyer sur une touche, déposer sur la roue")
     }
 

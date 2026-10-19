@@ -15,6 +15,7 @@ final class WheelPanel: NSPanel {
         isReleasedWhenClosed = false
         isMovable = false
         animationBehavior = .none
+        appearance = Theme.hudAppearance
     }
 
     /// Keyboard mode (§5.3): the panel takes key events without activating

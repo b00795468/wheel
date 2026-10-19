@@ -119,6 +119,7 @@ final class HUDToast {
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
+        panel.appearance = Theme.hudAppearance
         content = HUDToastView(frame: NSRect(origin: .zero, size: Self.size))
         panel.contentView = content
         content.onClick = { [weak self] in self?.reveal() }
@@ -377,7 +378,7 @@ extension HUDToast {
                               symbol: "photo")
         }
         let view = toast.content
-        view.appearance = NSApp.effectiveAppearance
+        view.appearance = Theme.hudAppearance
         guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
         view.cacheDisplay(in: view.bounds, to: rep)
         try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
