@@ -17,7 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         gestures.start()
         #if DEBUG
-        gestures.showDebugWheelIfRequested()
+        gestures.performDebugLaunchArguments()
         #endif
 
         // The app has no Dock or menu bar icon: show Settings once so the
