@@ -26,7 +26,7 @@
 | 1. Squelette | ✅ Compile (Debug), testée : lancement LSUIElement, Réglages au 1er lancement et à la réouverture (sur l’espace actif), bouton Quitter, CPU 0 % au repos |
 | 2. Geste + roue factice | ✅ Validée par Raphaël (geste réel, zones de drop sans zone morte) |
 | 3. Registre + images & PDF | ✅ Validée par Raphaël (58 tests, conversions réelles, checklist manuelle OK). Sortie WebP reportée en phase 4 (ImageIO ne l’encode pas) |
-| 4. ffmpeg + audio/vidéo | 🟡 Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-4-ffmpeg-media.md`), 85 tests OK, conversions réelles via `-debugRun` (HEVC→MP4, GIF, MP3), ffmpeg arrêté à l’annulation et à la fermeture ; à valider : checklist manuelle (vrai drag, 3 vidéos en parallèle, grosse vidéo, invites) |
+| 4. ffmpeg + audio/vidéo | ✅ Go donné par Raphaël (85 tests, conversions réelles HEVC→MP4/GIF/MP3, ffmpeg arrêté à l’annulation et à la fermeture) |
 | 5 à 8 | ⏳ Pas commencées |
 
 ## Décisions en attente
