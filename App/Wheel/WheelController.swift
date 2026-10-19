@@ -25,6 +25,11 @@ final class WheelController {
     /// Whether the drag is currently over the panel.
     private(set) var isDragInside = false
 
+    /// Segments offered by a wheel for the dragged files.
+    var segmentsProvider: (WheelMode, [URL]) -> [WheelSegment] = { _, _ in [] }
+    /// Called after files were dropped on a segment, with its id.
+    var onDrop: ((String, [URL]) -> Void)?
+
     init() {
         let side = WheelView.side
         let size = NSSize(width: side, height: side + Self.titleGap + WheelTitleView.height)
@@ -102,15 +107,15 @@ final class WheelController {
     }
 
     private func load(_ mode: WheelMode) {
-        let model = WheelModel(mode: mode, segments: PlaceholderSegments.segments(for: mode))
-        self.model = model
+        model = WheelModel(mode: mode, segments: segmentsProvider(mode, files))
         titleView.setMode(mode)
         reloadItems()
     }
 
     private func reloadItems() {
         setHoveredSlot(nil)
-        wheelView.setItems(model?.items ?? [])
+        guard let model else { return }
+        wheelView.setItems(model.items, emptyMessage: model.mode.emptyMessage)
     }
 
     /// Panel origin putting the wheel centre on `point`, kept inside the
@@ -178,7 +183,9 @@ extension WheelController: WheelDropTargetDelegate {
         }
         let paths = files.map(\.path).joined(separator: ", ")
         AppInfo.gestureLog.notice("Drop on \(segment.id, privacy: .public): \(paths, privacy: .public)")
+        let dropped = files
         dismiss(reason: "dropped on \(segment.id)")
+        onDrop?(segment.id, dropped)
         return true
     }
 }

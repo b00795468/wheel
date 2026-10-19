@@ -51,11 +51,4 @@ final class WheelModelTests: XCTestCase {
         XCTAssertEqual(WheelMode.mode(for: .control), .actions)
         XCTAssertNil(WheelMode.mode(for: .option))
     }
-
-    func testPlaceholderWheelsFitOnOnePage() {
-        for mode in WheelMode.allCases {
-            let count = PlaceholderSegments.segments(for: mode).count
-            XCTAssertTrue((1...WheelModel.maxItemsPerPage).contains(count), "\(mode)")
-        }
-    }
 }

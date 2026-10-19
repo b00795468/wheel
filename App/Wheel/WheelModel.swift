@@ -21,6 +21,15 @@ enum WheelMode: CaseIterable {
         }
     }
 
+    /// Shown on the ring when no segment applies (§5.2).
+    var emptyMessage: String {
+        switch self {
+        case .convert: "Aucune conversion pour ce type"
+        case .tools: "Aucun outil pour ce type"
+        case .actions: "Aucune action pour ce type"
+        }
+    }
+
     static func mode(for key: TriggerKey) -> WheelMode? {
         allCases.first { $0.trigger == key }
     }
@@ -71,33 +80,5 @@ struct WheelModel: Equatable {
 
     mutating func nextPage() {
         page = (page + 1) % pageCount
-    }
-}
-
-/// Stand-in segments for phase 2. The operation registry replaces this in phase 3.
-enum PlaceholderSegments {
-    static func segments(for mode: WheelMode) -> [WheelSegment] {
-        switch mode {
-        case .convert:
-            [
-                WheelSegment(id: "convert.png", title: "PNG", symbol: "photo"),
-                WheelSegment(id: "convert.jpg", title: "JPG", symbol: "photo.fill"),
-                WheelSegment(id: "convert.heic", title: "HEIC", symbol: "photo.on.rectangle"),
-                WheelSegment(id: "convert.webp", title: "WebP", symbol: "globe"),
-                WheelSegment(id: "convert.tiff", title: "TIFF", symbol: "doc.richtext"),
-                WheelSegment(id: "convert.pdf", title: "PDF", symbol: "doc.text"),
-            ]
-        case .tools:
-            [
-                WheelSegment(id: "tool.compress", title: "Compresser", symbol: "arrow.down.right.and.arrow.up.left"),
-                WheelSegment(id: "tool.resize", title: "Redimensionner", symbol: "aspectratio"),
-            ]
-        case .actions:
-            [
-                WheelSegment(id: "action.copyPath", title: "Copier le chemin", symbol: "doc.on.clipboard"),
-                WheelSegment(id: "action.reveal", title: "Afficher", symbol: "folder"),
-                WheelSegment(id: "action.airdrop", title: "AirDrop", symbol: "airplayaudio"),
-            ]
-        }
     }
 }

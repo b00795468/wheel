@@ -14,6 +14,7 @@ final class WheelView: NSView {
 
     private let material = NSVisualEffectView()
     private let centerView = WheelCenterView()
+    private let emptyLabel = NSTextField(wrappingLabelWithString: "")
     private var slotViews: [WheelSlotView] = []
     private(set) var geometry = WheelGeometry(slotCount: 0)
 
@@ -45,12 +46,20 @@ final class WheelView: NSView {
             width: 2 * WheelGeometry.innerRadius, height: 2 * WheelGeometry.innerRadius
         )
         addSubview(centerView)
+
+        emptyLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        emptyLabel.textColor = .secondaryLabelColor
+        emptyLabel.alignment = .center
+        let ringMiddle = (WheelGeometry.innerRadius + WheelGeometry.outerRadius) / 2
+        emptyLabel.frame = NSRect(x: center.x - 80, y: center.y + ringMiddle - 17, width: 160, height: 34)
+        emptyLabel.isHidden = true
+        addSubview(emptyLabel)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
-    func setItems(_ items: [WheelItem]) {
+    func setItems(_ items: [WheelItem], emptyMessage: String) {
         slotViews.forEach { $0.removeFromSuperview() }
         geometry = WheelGeometry(slotCount: items.count)
         slotViews = items.enumerated().map { index, item in
@@ -58,6 +67,8 @@ final class WheelView: NSView {
             addSubview(view, positioned: .below, relativeTo: centerView)
             return view
         }
+        emptyLabel.stringValue = emptyMessage
+        emptyLabel.isHidden = !items.isEmpty
         highlightedSlot = nil
     }
 
