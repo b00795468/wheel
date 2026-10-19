@@ -136,3 +136,12 @@ struct WheelModel: Equatable {
         page = 0
     }
 }
+
+extension WheelModel {
+    /// Slot reached by an arrow key (§5.3): clockwise when `forward`, wrapping.
+    static func step(from slot: Int?, count: Int, forward: Bool) -> Int? {
+        guard count > 0 else { return nil }
+        guard let slot else { return forward ? 0 : count - 1 }
+        return (slot + (forward ? 1 : count - 1)) % count
+    }
+}

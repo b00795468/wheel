@@ -67,6 +67,10 @@ final class JobQueue {
         running.values.forEach { $0.cancel() }
     }
 
+    func inform(_ message: String, symbol: String) {
+        hud.inform(message, symbol: symbol)
+    }
+
     private func finish(_ id: UUID, operation: any FileOperation, inputs: [URL], toast: HUDToast,
                         result: Result<[URL], Error>) {
         running[id] = nil

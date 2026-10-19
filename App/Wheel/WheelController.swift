@@ -21,6 +21,20 @@ final class WheelController {
     /// Bumped on every show/dismiss so a stale fade-out never hides a newer wheel.
     private var generation = 0
 
+    /// Opened by the shortcut rather than a drag (§5.3).
+    private var keyboardMode = false
+    private var keyboardTapDetector = ModifierTapDetector()
+
+    private enum KeyCode {
+        static let left: UInt16 = 123
+        static let right: UInt16 = 124
+        static let down: UInt16 = 125
+        static let up: UInt16 = 126
+        static let returnKey: UInt16 = 36
+        static let enter: UInt16 = 76
+        static let escape: UInt16 = 53
+    }
+
     private(set) var isVisible = false
     /// Whether the drag is currently over the panel.
     private(set) var isDragInside = false
@@ -42,6 +56,11 @@ final class WheelController {
         dropTarget.addSubview(titleView)
         panel.contentView = dropTarget
         dropTarget.delegate = self
+        panel.keyHandler = { [weak self] event in self?.handleKeyboard(event) ?? false }
+        panel.onResignKey = { [weak self] in
+            guard let self, self.keyboardMode else { return }
+            self.dismiss(reason: "keyboard wheel lost focus")
+        }
     }
 
     // MARK: Showing
@@ -82,7 +101,72 @@ final class WheelController {
     func switchMode(to mode: WheelMode) {
         guard isVisible, mode != model?.mode else { return }
         load(mode)
+        if keyboardMode { highlightFirstSlot() }
         AppInfo.gestureLog.info("Wheel switched to \(mode.title, privacy: .public)")
+    }
+
+    /// Keyboard mode: the wheel opens at the centre of the screen under the
+    /// cursor, with the first slot highlighted.
+    func showForKeyboard(_ mode: WheelMode, files: [URL]) {
+        let mouse = NSEvent.mouseLocation
+        let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
+        let center = screen.map { CGPoint(x: $0.visibleFrame.midX, y: $0.visibleFrame.midY) } ?? mouse
+        keyboardMode = true
+        keyboardTapDetector = ModifierTapDetector()
+        show(mode, files: files, at: center)
+        panel.acceptsKeyboard = true
+        panel.makeKey()
+        highlightFirstSlot()
+        AppInfo.gestureLog.info("Keyboard wheel shown, panel is key: \(self.panel.isKeyWindow, privacy: .public)")
+    }
+
+    private func highlightFirstSlot() {
+        setHoveredSlot(WheelModel.step(from: nil, count: model?.items.count ?? 0, forward: true))
+    }
+
+    private func handleKeyboard(_ event: NSEvent) -> Bool {
+        guard keyboardMode, isVisible else { return false }
+        if event.type == .flagsChanged {
+            if let key = keyboardTapDetector.flagsChanged(event.modifierFlags, at: event.timestamp),
+               let mode = SettingsStore.triggers.mode(for: key) {
+                switchMode(to: mode)
+            }
+            return true
+        }
+        keyboardTapDetector.otherKeyPressed()
+        let count = model?.items.count ?? 0
+        switch event.keyCode {
+        case KeyCode.right, KeyCode.down:
+            setHoveredSlot(WheelModel.step(from: hoveredSlot, count: count, forward: true))
+        case KeyCode.left, KeyCode.up:
+            setHoveredSlot(WheelModel.step(from: hoveredSlot, count: count, forward: false))
+        case KeyCode.returnKey, KeyCode.enter:
+            activateHoveredSlot()
+        case KeyCode.escape:
+            dismiss(reason: "Escape (keyboard)")
+        default:
+            break
+        }
+        return true
+    }
+
+    /// Return on a slot: navigate like a long hover, or apply the segment.
+    private func activateHoveredSlot() {
+        guard let slot = hoveredSlot, let model, model.items.indices.contains(slot) else { return }
+        if let navigation = navigation(for: model.items[slot]) {
+            navigate(navigation)
+        } else if case .segment(let segment) = model.items[slot] {
+            deliver(segment)
+        }
+    }
+
+    /// Applies a leaf segment to the files, for a drop or a Return.
+    private func deliver(_ segment: WheelSegment) {
+        let paths = files.map(\.path).joined(separator: ", ")
+        AppInfo.gestureLog.notice("Apply \(segment.id, privacy: .public): \(paths, privacy: .public)")
+        let chosen = files
+        dismiss(reason: "applied \(segment.id)")
+        onDrop?(segment.id, chosen)
     }
 
     func dismiss(reason: String) {
@@ -90,6 +174,10 @@ final class WheelController {
         isVisible = false
         isDragInside = false
         setHoveredSlot(nil)
+        if keyboardMode {
+            keyboardMode = false
+            panel.acceptsKeyboard = false
+        }
         generation += 1
         let dismissedGeneration = generation
         AppInfo.gestureLog.info("Wheel dismissed: \(reason, privacy: .public)")
@@ -154,7 +242,7 @@ final class WheelController {
         guard let slot, let model else { return }
 
         NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
-        if let navigation = navigation(for: model.items[slot]) {
+        if !keyboardMode, let navigation = navigation(for: model.items[slot]) {
             navigationTimer = Timer.scheduledTimer(withTimeInterval: Self.pagingDelay, repeats: false) { _ in
                 MainActor.assumeIsolated { self.navigate(navigation) }
             }
@@ -169,6 +257,7 @@ final class WheelController {
         case .back: model?.goBack()
         }
         reloadItems()
+        if keyboardMode { highlightFirstSlot() }
         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
     }
 
@@ -199,11 +288,7 @@ extension WheelController: WheelDropTargetDelegate {
             dismiss(reason: "drop outside a segment")
             return false
         }
-        let paths = files.map(\.path).joined(separator: ", ")
-        AppInfo.gestureLog.notice("Drop on \(segment.id, privacy: .public): \(paths, privacy: .public)")
-        let dropped = files
-        dismiss(reason: "dropped on \(segment.id)")
-        onDrop?(segment.id, dropped)
+        deliver(segment)
         return true
     }
 }

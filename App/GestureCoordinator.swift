@@ -18,6 +18,8 @@ final class GestureCoordinator {
     private var accessibilityTimer: Timer?
     private let registry = OperationRegistry.standard
     private let jobs = JobQueue()
+    private let hotKeys = HotKeyCenter()
+    private var hotKeyObserver: NSObjectProtocol?
 
     func start() {
         wheel.segmentsProvider = { [registry] mode, files in
@@ -32,6 +34,12 @@ final class GestureCoordinator {
 
         installKeyMonitor()
         watchAccessibilityUntilGranted()
+        hotKeys.onPress = { [weak self] in self?.openFromKeyboard() }
+        hotKeys.register(SettingsStore.hotKey)
+        hotKeyObserver = NotificationCenter.default.addObserver(forName: SettingsStore.hotKeyDidChange, object: nil,
+                                                                queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { _ = self?.hotKeys.register(SettingsStore.hotKey) }
+        }
     }
 
     private func installKeyMonitor() {
@@ -89,6 +97,27 @@ final class GestureCoordinator {
         jobs.run(operation, inputs: files)
     }
 
+    /// The shortcut (§5.3): opens the wheel on the Finder selection.
+    private func openFromKeyboard() {
+        guard !wheel.isVisible else { return }
+        Task { [weak self] in
+            let selection = await FinderSelection.current()
+            guard let self else { return }
+            switch selection {
+            case .success(let files) where !files.isEmpty:
+                self.wheel.showForKeyboard(.convert, files: files)
+            case .success:
+                self.jobs.inform("Sélectionnez des fichiers dans le Finder.", symbol: "cursorarrow.rays")
+            case .failure(.notAuthorized):
+                self.jobs.inform("Autorisez Pivot à piloter le Finder.", symbol: "lock")
+                PermissionsManager.openAutomationSettings()
+            case .failure(.unavailable(let detail)):
+                TechnicalLog.record("Finder selection failed: \(detail)")
+                self.jobs.inform("Impossible de lire la sélection du Finder.", symbol: "exclamationmark.triangle")
+            }
+        }
+    }
+
     /// Called when the app quits, so no ffmpeg keeps running orphaned.
     func cancelAllJobs() {
         jobs.cancelAll()
@@ -112,7 +141,8 @@ extension GestureCoordinator {
     /// Development shortcuts, no drag needed:
     /// `open Pivot.app --args -debugWheel convert|tools|actions [-debugSlot N] [-debugSnapshot out.png]
     /// [-debugFiles '("/path/a", "/path/b")']` shows the wheel;
-    /// `-debugRun convert.png -debugFiles '("/path/a")'` runs an operation as if dropped.
+    /// `-debugRun convert.png -debugFiles '("/path/a")'` runs an operation as if dropped;
+    /// `-debugKeyboard YES -debugFiles '("/path/a")'` opens the keyboard wheel without the shortcut.
     func performDebugLaunchArguments() {
         let defaults = UserDefaults.standard
         let paths = defaults.stringArray(forKey: "debugFiles") ?? ["/System/Library/Desktop Pictures/", "/etc/hosts"]
@@ -120,6 +150,10 @@ extension GestureCoordinator {
 
         if let id = defaults.string(forKey: "debugRun") {
             runOperation(id, on: files)
+        }
+        if defaults.bool(forKey: "debugKeyboard") {
+            wheel.showForKeyboard(.convert, files: files)
+            return
         }
         guard let name = defaults.string(forKey: "debugWheel"),
               let mode = WheelMode.allCases.first(where: { "\($0)" == name }),

@@ -77,4 +77,13 @@ final class WheelModelTests: XCTestCase {
         model.nextPage()
         XCTAssertEqual(ids(model.items), ["s6", "s7", "s8", "s9", "more", "back"])
     }
+
+    func testArrowStepsWrapAround() {
+        XCTAssertEqual(WheelModel.step(from: nil, count: 4, forward: true), 0)
+        XCTAssertEqual(WheelModel.step(from: nil, count: 4, forward: false), 3)
+        XCTAssertEqual(WheelModel.step(from: 3, count: 4, forward: true), 0)
+        XCTAssertEqual(WheelModel.step(from: 0, count: 4, forward: false), 3)
+        XCTAssertEqual(WheelModel.step(from: 1, count: 4, forward: true), 2)
+        XCTAssertNil(WheelModel.step(from: nil, count: 0, forward: true))
+    }
 }

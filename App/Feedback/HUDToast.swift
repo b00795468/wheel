@@ -39,6 +39,14 @@ final class HUDController {
         remove(toast, after: 0)
     }
 
+    /// A short notice that is not about a job (keyboard mode problems).
+    func inform(_ message: String, symbol: String) {
+        let toast = HUDToast(onCancel: {})
+        toast.showSuccess(message: message, outputs: [], symbol: symbol)
+        present(toast)
+        remove(toast, after: Self.failureDuration)
+    }
+
     private func present(_ toast: HUDToast) {
         if !visible.contains(where: { $0 === toast }) {
             visible.append(toast)
