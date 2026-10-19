@@ -11,7 +11,13 @@ if ! command -v xcodegen >/dev/null; then
 fi
 
 xcodegen generate --quiet
-xcodebuild -project Pivot.xcodeproj -scheme Pivot -configuration "$CONFIG" \
-  -derivedDataPath build -destination 'platform=macOS,arch=arm64' build \
-  | grep -E '(error|warning:|BUILD )' || true
-test -d "build/Build/Products/$CONFIG/Pivot.app" && echo "→ build/Build/Products/$CONFIG/Pivot.app"
+mkdir -p build
+LOG=build/xcodebuild.log
+if ! xcodebuild -project Pivot.xcodeproj -scheme Pivot -configuration "$CONFIG" \
+  -derivedDataPath build -destination 'platform=macOS,arch=arm64' build >"$LOG" 2>&1; then
+  grep -E 'error:' "$LOG" | sort -u >&2
+  echo "BUILD FAILED (log complet : $LOG)" >&2
+  exit 1
+fi
+grep -E 'warning:' "$LOG" | sort -u || true
+echo "BUILD OK → build/Build/Products/$CONFIG/Pivot.app"
