@@ -1,14 +1,6 @@
 import PDFKit
 import XCTest
 
-/// Thread-safe progress sink for @Sendable callbacks.
-private final class ProgressRecorder: @unchecked Sendable {
-    private let lock = NSLock()
-    private var values: [Double] = []
-    func record(_ value: Double) { lock.withLock { values.append(value) } }
-    var last: Double? { lock.withLock { values.last } }
-}
-
 final class ConvertOperationTests: XCTestCase {
     func testConvertRunsOnEveryInputAndReportsProgress() async throws {
         let dir = try Fixtures.directory(for: self)

@@ -124,3 +124,69 @@ enum Fixtures {
     static func isRed(_ pixel: [UInt8]) -> Bool { pixel[0] > 200 && pixel[1] < 70 && pixel[2] < 70 }
     static func isWhite(_ pixel: [UInt8]) -> Bool { pixel[0] > 240 && pixel[1] > 240 && pixel[2] > 240 }
 }
+
+/// Thread-safe progress sink for @Sendable callbacks.
+final class ProgressRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var recorded: [Double] = []
+    func record(_ value: Double) { lock.withLock { recorded.append(value) } }
+    var values: [Double] { lock.withLock { recorded } }
+    var last: Double? { values.last }
+}
+
+extension Fixtures {
+    /// ffmpeg / ffprobe fetched by scripts/fetch-ffmpeg.sh; tests needing them are skipped otherwise.
+    static func ffmpeg() throws -> FFmpegRunner {
+        let vendor = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appending(path: "Vendor/ffmpeg")
+        let runner = FFmpegRunner(ffmpeg: vendor.appending(path: "ffmpeg"), ffprobe: vendor.appending(path: "ffprobe"))
+        guard runner.isAvailable else { throw XCTSkip("Vendor/ffmpeg missing: run scripts/fetch-ffmpeg.sh") }
+        return runner
+    }
+
+    /// Test video from ffmpeg's lavfi sources: colour bars, plus a 440 Hz tone when `audio`.
+    @discardableResult
+    static func writeVideo(_ name: String, in directory: URL, seconds: Int = 2, codec: String = "h264_videotoolbox",
+                           audio: Bool = true, size: String = "1280x720") throws -> URL {
+        let url = directory.appending(path: name)
+        var arguments = ["-hide_banner", "-loglevel", "error",
+                         "-f", "lavfi", "-i", "testsrc2=duration=\(seconds):size=\(size):rate=30"]
+        if audio {
+            arguments += ["-f", "lavfi", "-i", "sine=frequency=440:duration=\(seconds)", "-c:a", "aac"]
+        }
+        arguments += ["-c:v", codec, "-pix_fmt", "yuv420p", "-shortest", url.path]
+        try runTool(try ffmpeg().ffmpeg, arguments)
+        return url
+    }
+
+    @discardableResult
+    static func writeAudio(_ name: String, in directory: URL, seconds: Int = 2) throws -> URL {
+        let url = directory.appending(path: name)
+        try runTool(try ffmpeg().ffmpeg, ["-hide_banner", "-loglevel", "error",
+                                          "-f", "lavfi", "-i", "sine=frequency=440:duration=\(seconds)", url.path])
+        return url
+    }
+
+    /// Codec name of every stream, via ffprobe.
+    static func codecs(of url: URL) throws -> [String] {
+        let output = try runTool(try ffmpeg().ffprobe, ["-v", "error", "-show_entries", "stream=codec_name",
+                                                         "-of", "csv=p=0", url.path])
+        return output.split(separator: "\n").map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ", ")) }
+    }
+
+    @discardableResult
+    static func runTool(_ executable: URL, _ arguments: [String]) throws -> String {
+        let process = Process()
+        process.executableURL = executable
+        process.arguments = arguments
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else { throw CocoaError(.fileWriteUnknown) }
+        return String(decoding: data, as: UTF8.self)
+    }
+}
