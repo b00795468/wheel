@@ -24,7 +24,7 @@
 | §2 Environnement | ✅ macOS 27.0.1, arm64, Xcode 27.1, Homebrew 7.0.9, XcodeGen installé |
 | 1. Squelette | ✅ Compile (Debug), testée : lancement LSUIElement, Réglages au 1er lancement et à la réouverture (sur l’espace actif), bouton Quitter, CPU 0 % au repos |
 | 2. Geste + roue factice | ✅ Validée par Raphaël (geste réel, zones de drop sans zone morte) |
-| 3. Registre + images & PDF | 🟡 Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-3-images-pdf.md`), 58 tests OK, conversions réelles vérifiées via `-debugRun` ; à valider : vrai drag, pastille HUD, son, absence d’invite « Bureau » après un vrai drop. Sortie WebP reportée en phase 4 (ImageIO ne l’encode pas) |
+| 3. Registre + images & PDF | ✅ Validée par Raphaël (58 tests, conversions réelles, checklist manuelle OK). Sortie WebP reportée en phase 4 (ImageIO ne l’encode pas) |
 | 4 à 8 | ⏳ Pas commencées |
 
 ## Décisions en attente
