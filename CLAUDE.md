@@ -4,9 +4,10 @@
 - Build : `scripts/build.sh [Debug|Release]` (XcodeGen + xcodebuild). Lancer : `open build/Build/Products/Debug/Pivot.app`.
 - Tests unitaires : `scripts/test.sh` (cible PivotTests sans app hôte).
 - ffmpeg : `scripts/fetch-ffmpeg.sh` (appelé automatiquement par build.sh et test.sh) récupère le build martin-riedl.de 9.0.2 arm64 validé par Raphaël, SHA-256 épinglés, dans `Vendor/ffmpeg/` (non versionné) ; la phase de build « Embed ffmpeg » le copie dans `Contents/Resources/bin/` et le re-signe.
-- Debug sans drag : `open -n Pivot.app --args -debugWheel convert|tools|actions [-debugSlot N] [-debugSnapshot out.png] [-debugFiles '("/chemin")']` (rendu hors écran : sans matériau HUD ni échelle de survol) ; `-debugRun convert.png -debugFiles '("/chemin")'` exécute une opération comme après un drop.
+- Debug sans drag : `open -n Pivot.app --args -debugWheel convert|tools|actions [-debugSlot N] [-debugSnapshot out.png] [-debugFiles '("/chemin")']` (rendu hors écran : sans matériau HUD ni échelle de survol) ; `-debugRun convert.png -debugFiles '("/chemin")'` exécute une opération comme après un drop ; `-debugKeyboard YES -debugFiles '("/chemin")'` ouvre la roue clavier ; `-debugSettingsSnapshot out.png` et `-debugOnboardingSnapshot out.png -debugOnboardingPage N` rendent les fenêtres hors écran (fond transparent : composer sur un fond sombre pour lire le texte blanc).
 - Journal technique des échecs : `~/Library/Logs/Pivot/Pivot.log`. Vérifier les invites de confidentialité : `log show --predicate 'subsystem == "com.apple.TCC" AND eventMessage CONTAINS "pid=<PID>"'`.
-- Signature : `build.sh` signe avec le certificat local auto-signé « Pivot Dev » s’il existe (l’autorisation Accessibilité survit alors aux builds), sinon en ad hoc (à réautoriser après chaque build : `tccutil reset Accessibility local.pivot.app`). Écart assumé au §3, validé par Raphaël.
+- Signature : `build.sh` et `test.sh` (via `scripts/signing.sh`, car l’action de test recompile l’app) signent avec le certificat local auto-signé « Pivot Dev » s’il existe (l’autorisation Accessibilité survit alors aux builds), sinon en ad hoc (à réautoriser après chaque build : `tccutil reset Accessibility local.pivot.app`). Écart assumé au §3, validé par Raphaël.
+- Revoir l’onboarding : `defaults delete local.pivot.app hasCompletedFirstLaunch` puis relancer.
 - Réponds-moi en français ; code et commentaires en anglais.
 - À la fin de chaque phase : compiler, lancer, vérifier, commit, mettre à jour l'état ci-dessous, puis attendre mon « go ».
 
@@ -28,7 +29,8 @@
 | 3. Registre + images & PDF | ✅ Validée par Raphaël (58 tests, conversions réelles, checklist manuelle OK). Sortie WebP reportée en phase 4 (ImageIO ne l’encode pas) |
 | 4. ffmpeg + audio/vidéo | ✅ Go donné par Raphaël (85 tests, conversions réelles HEVC→MP4/GIF/MP3, ffmpeg arrêté à l’annulation et à la fermeture) |
 | 5. Outils + Actions | ✅ Go donné par Raphaël. Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-5-tools-actions.md`), 111 tests OK, essais réels (compression vidéo HEVC 1080p, redimensionnement, copie de chemin). Décisions : format conservé, jamais d’agrandissement, compression refusée si pas plus petite, BMP hors « Compresser », PDF via le filtre système « Reduce File Size » (les options PDFKit n’ont aucun effet ; liens/annotations perdus). |
-| 6 à 8 | ⏳ Pas commencées |
+| 6. Onboarding, Réglages, clavier | 🟡 Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-6-settings-onboarding-keyboard.md`), 121 tests OK ; mode clavier testé avec de vraies touches (→ puis Entrée, Échap) ; onboarding vérifié au premier lancement ; CPU 0 % au repos. Écart : « Surveillance de l’entrée » non demandée (jamais requise, mesuré). À valider : checklist manuelle |
+| 7 à 8 | ⏳ Pas commencées |
 
 ## Décisions en attente
 
