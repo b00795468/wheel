@@ -45,24 +45,56 @@ struct OutputLocator: Sendable {
     /// then moves it to a free name and gives it the input's creation date.
     func commit(baseName: String, fileExtension: String, for input: URL,
                 write: (URL) throws -> Void) throws -> URL {
-        let directory = try directory(for: input)
-        let fileManager = FileManager.default
-        let staging = try fileManager.url(for: .itemReplacementDirectory, in: .userDomainMask,
-                                          appropriateFor: directory, create: true)
-        defer { try? fileManager.removeItem(at: staging) }
-        let temporary = staging.appending(path: "\(baseName).\(fileExtension)")
-        try write(temporary)
+        let staging = try Staging(locator: self, baseName: baseName, fileExtension: fileExtension, input: input)
+        defer { staging.cleanUp() }
+        try write(staging.temporary)
+        return try staging.place()
+    }
 
-        // Another job may take the same name between the check and the move.
-        while true {
-            let target = Self.availableURL(in: directory, baseName: baseName, fileExtension: fileExtension)
-            do {
-                try fileManager.moveItem(at: temporary, to: target)
-                Self.copyCreationDate(from: input, to: target)
-                return target
-            } catch CocoaError.fileWriteFileExists {
-                continue
+    /// `commit` for writers that are async, such as ffmpeg.
+    func commitAsync(baseName: String, fileExtension: String, for input: URL,
+                     write: (URL) async throws -> Void) async throws -> URL {
+        let staging = try Staging(locator: self, baseName: baseName, fileExtension: fileExtension, input: input)
+        defer { staging.cleanUp() }
+        try await write(staging.temporary)
+        return try staging.place()
+    }
+
+    /// A temporary file on the output volume, moved to a free name once written.
+    private struct Staging {
+        let directory: URL
+        let folder: URL
+        let temporary: URL
+        let baseName: String
+        let fileExtension: String
+        let input: URL
+
+        init(locator: OutputLocator, baseName: String, fileExtension: String, input: URL) throws {
+            directory = try locator.directory(for: input)
+            folder = try FileManager.default.url(for: .itemReplacementDirectory, in: .userDomainMask,
+                                                 appropriateFor: directory, create: true)
+            temporary = folder.appending(path: "\(baseName).\(fileExtension)")
+            self.baseName = baseName
+            self.fileExtension = fileExtension
+            self.input = input
+        }
+
+        func place() throws -> URL {
+            // Another job may take the same name between the check and the move.
+            while true {
+                let target = OutputLocator.availableURL(in: directory, baseName: baseName, fileExtension: fileExtension)
+                do {
+                    try FileManager.default.moveItem(at: temporary, to: target)
+                    OutputLocator.copyCreationDate(from: input, to: target)
+                    return target
+                } catch CocoaError.fileWriteFileExists {
+                    continue
+                }
             }
+        }
+
+        func cleanUp() {
+            try? FileManager.default.removeItem(at: folder)
         }
     }
 

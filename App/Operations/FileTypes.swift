@@ -11,6 +11,17 @@ enum FileTypes {
     /// Image formats accepted as input (§5.4).
     static let imageInputs: [UTType] = [.jpeg, .png, .heic, .heif, .webP, .tiff, avif, .bmp]
 
+    // Created from extensions, which always yields a type (declared or dynamic).
+    static let m4a = UTType(filenameExtension: "m4a")!
+    static let flac = UTType(filenameExtension: "flac")!
+    private static let mkv = UTType(filenameExtension: "mkv")!
+    private static let webm = UTType(filenameExtension: "webm")!
+    private static let ogg = UTType(filenameExtension: "ogg")!
+
+    /// Video and audio formats accepted as input (§5.4).
+    static let videoInputs: [UTType] = [.mpeg4Movie, .quickTimeMovie, mkv, webm, .avi]
+    static let audioInputs: [UTType] = [.mp3, .mpeg4Audio, m4a, .wav, flac, .aiff, ogg]
+
     static func type(of url: URL) -> UTType {
         if url.hasDirectoryPath { return .folder }
         return UTType(filenameExtension: url.pathExtension) ?? .data
@@ -22,6 +33,14 @@ enum FileTypes {
 
     static func isPDF(_ type: UTType) -> Bool {
         type.conforms(to: .pdf)
+    }
+
+    static func isVideo(_ type: UTType) -> Bool {
+        videoInputs.contains { type.conforms(to: $0) }
+    }
+
+    static func isAudio(_ type: UTType) -> Bool {
+        audioInputs.contains { type.conforms(to: $0) }
     }
 }
 

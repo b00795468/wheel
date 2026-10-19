@@ -34,4 +34,16 @@ final class FileTypesTests: XCTestCase {
     func testBaseName() {
         XCTAssertEqual(URL(fileURLWithPath: "/x/Été 🌞.photo.heic").baseName, "Été 🌞.photo")
     }
+
+    func testVideoAndAudioInputs() {
+        for ext in ["mp4", "mov", "mkv", "webm", "avi"] {
+            XCTAssertTrue(FileTypes.isVideo(type("/x/a.\(ext)")), ext)
+            XCTAssertFalse(FileTypes.isAudio(type("/x/a.\(ext)")), ext)
+        }
+        for ext in ["mp3", "m4a", "wav", "flac", "aiff", "aif", "ogg"] {
+            XCTAssertTrue(FileTypes.isAudio(type("/x/a.\(ext)")), ext)
+            XCTAssertFalse(FileTypes.isVideo(type("/x/a.\(ext)")), ext)
+        }
+        XCTAssertFalse(FileTypes.isVideo(type("/x/a.gif")))
+    }
 }

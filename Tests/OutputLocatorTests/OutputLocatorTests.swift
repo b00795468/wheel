@@ -110,4 +110,26 @@ final class OutputLocatorTests: XCTestCase {
         XCTAssertEqual(try locator.makeFolder(baseName: "doc", for: input).lastPathComponent, "doc")
         XCTAssertEqual(try locator.makeFolder(baseName: "doc", for: input).lastPathComponent, "doc 2")
     }
+
+    func testCommitAsyncWritesThroughAnAsyncWriter() async throws {
+        let dir = try Fixtures.directory(for: self)
+        let locator = OutputLocator(destination: .custom(dir))
+        let input = dir.appending(path: "clip.mov")
+
+        let output = try await locator.commitAsync(baseName: "clip", fileExtension: "mp4", for: input) { url in
+            try await Task.sleep(for: .milliseconds(10))
+            try Data("video".utf8).write(to: url)
+        }
+
+        XCTAssertEqual(output.lastPathComponent, "clip.mp4")
+        XCTAssertEqual(try String(contentsOf: output, encoding: .utf8), "video")
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: dir.path), ["clip.mp4"])
+    }
+
+    func testOperationErrorsCompareByMessageAndKeepTheirDetail() {
+        let detailed = OperationError.unreadableVideo.withDetail("moov atom not found")
+        XCTAssertEqual(detailed, .unreadableVideo)
+        XCTAssertEqual(detailed.detail, "moov atom not found")
+        XCTAssertEqual(detailed.errorDescription, "Ce fichier vidéo semble corrompu ou illisible.")
+    }
 }
