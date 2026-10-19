@@ -1405,6 +1405,8 @@ enum DebugSnapshot {
 - [ ] **Step 4 : build + rendu** — `scripts/build.sh Debug` → `BUILD OK` ; `scripts/test.sh` → `TESTS OK` ; `open -n -g $APP --args -debugSettingsSnapshot $S/settings.png` puis lire l'image : sections Roues, Mode clavier (⌃⌥Espace), Sortie, Général, Autorisations, pied avec version et Quitter.
 - [ ] **Step 5 : commit** — `git add -A && git commit -m "Phase 6: complete Settings window"`.
 
+(Ajusté à l'exécution : la section « Autorisations » passe en tête du formulaire, sinon elle était sous la ligne de flottaison dans une fenêtre de 660 pt.)
+
 ---
 
 ### Task 6 : onboarding (3 écrans) et premier lancement

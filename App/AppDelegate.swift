@@ -1,8 +1,10 @@
 import AppKit
+import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private lazy var settingsWindow = SettingsWindowController()
+    private let settings = SettingsModel()
+    private lazy var settingsWindow = SettingsWindowController(model: settings)
     private let gestures = GestureCoordinator()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -18,6 +20,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         gestures.start()
         #if DEBUG
         gestures.performDebugLaunchArguments()
+        if let path = UserDefaults.standard.string(forKey: "debugSettingsSnapshot") {
+            DebugSnapshot.render(SettingsView(model: settings), size: CGSize(width: 520, height: 660), to: path)
+        }
         #endif
 
         // The app has no Dock or menu bar icon: show Settings once so the
@@ -43,3 +48,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 }
+
+#if DEBUG
+/// Offscreen render of a SwiftUI view to a PNG, to check a window's layout
+/// without screen capture rights.
+@MainActor
+enum DebugSnapshot {
+    static func render<Content: View>(_ view: Content, size: CGSize, to path: String) {
+        let hosting = NSHostingView(rootView: view)
+        let window = NSWindow(contentRect: CGRect(origin: .zero, size: size), styleMask: [.titled], backing: .buffered, defer: false)
+        window.contentView = hosting
+        hosting.frame = CGRect(origin: .zero, size: size)
+        hosting.layoutSubtreeIfNeeded()
+        // Let SwiftUI finish its first layout pass.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            guard let rep = hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds) else { return }
+            hosting.cacheDisplay(in: hosting.bounds, to: rep)
+            try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
+            window.close()
+        }
+    }
+}
+#endif

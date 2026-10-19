@@ -5,7 +5,7 @@ import SwiftUI
 /// activate ourselves explicitly, otherwise the window opens behind others.
 @MainActor
 final class SettingsWindowController: NSWindowController {
-    convenience init() {
+    convenience init(model: SettingsModel) {
         let window = NSWindow(
             contentRect: .zero,
             styleMask: [.titled, .closable],
@@ -13,7 +13,7 @@ final class SettingsWindowController: NSWindowController {
             defer: false
         )
         window.title = "Réglages"
-        window.contentViewController = NSHostingController(rootView: SettingsView())
+        window.contentViewController = NSHostingController(rootView: SettingsView(model: model))
         window.isReleasedWhenClosed = false
         // Reopening from another Space must bring the window here, not
         // switch the user back to the Space it was first shown on.
