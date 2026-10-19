@@ -32,6 +32,33 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: local.pivot.app
         INFOPLIST_FILE: App/Info.plist
         GENERATE_INFOPLIST_FILE: NO
+    postBuildScripts:
+      # Copies the vendored ffmpeg into Contents/Resources/bin, drops the
+      # quarantine flag and re-signs it with the app's identity (§3). Xcode
+      # signs the app itself after every build phase.
+      - name: Embed ffmpeg
+        shell: /bin/bash
+        basedOnDependencyAnalysis: true
+        inputFiles:
+          - $(SRCROOT)/Vendor/ffmpeg/ffmpeg
+          - $(SRCROOT)/Vendor/ffmpeg/ffprobe
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/bin/ffmpeg
+          - $(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/bin/ffprobe
+        script: |
+          set -euo pipefail
+          BIN="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/bin"
+          mkdir -p "$BIN"
+          for tool in ffmpeg ffprobe; do
+            SRC="$SRCROOT/Vendor/ffmpeg/$tool"
+            if [ ! -x "$SRC" ]; then
+              echo "error: $SRC manquant, lancer scripts/fetch-ffmpeg.sh"
+              exit 1
+            fi
+            ditto "$SRC" "$BIN/$tool"
+            xattr -d com.apple.quarantine "$BIN/$tool" 2>/dev/null || true
+            codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY:--}" --timestamp=none "$BIN/$tool"
+          done
     scheme:
       testTargets: [PivotTests]
 

@@ -9,6 +9,11 @@ if ! command -v xcodegen >/dev/null; then
   exit 1
 fi
 
+# ffmpeg is embedded in the app and used by the tests (§3).
+if [ ! -x Vendor/ffmpeg/ffmpeg ] || [ ! -x Vendor/ffmpeg/ffprobe ]; then
+  scripts/fetch-ffmpeg.sh
+fi
+
 xcodegen generate --quiet
 mkdir -p build
 LOG=build/xcodebuild-test.log
