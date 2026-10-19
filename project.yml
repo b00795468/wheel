@@ -47,6 +47,7 @@ targets:
       - App/Wheel/WheelGeometry.swift
       - App/Wheel/WheelView.swift
       - App/Theme.swift
+      - App/Operations
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: local.pivot.tests

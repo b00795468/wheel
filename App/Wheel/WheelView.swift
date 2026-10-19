@@ -1,5 +1,4 @@
 import AppKit
-import UniformTypeIdentifiers
 
 /// The radial ring: a disc of HUD material, one view per slot, and the
 /// neutral centre showing the dragged file(s). Coordinates handed in and
@@ -240,17 +239,9 @@ private final class WheelCenterView: NSView {
 
     func setFiles(_ files: [URL]) {
         guard let first = files.first else { return }
-        icon.image = NSWorkspace.shared.icon(for: Self.contentType(of: first))
+        icon.image = NSWorkspace.shared.icon(for: FileTypes.type(of: first))
         name.stringValue = first.lastPathComponent
         count.stringValue = files.count > 1 ? "×\(files.count)" : ""
-    }
-
-    /// Type guessed from the URL alone. Reading the file during the drag
-    /// (e.g. icon(forFile:)) happens before the user's drop and triggers a
-    /// privacy prompt for Desktop, Documents, Downloads…
-    private static func contentType(of url: URL) -> UTType {
-        if url.hasDirectoryPath { return .folder }
-        return UTType(filenameExtension: url.pathExtension) ?? .data
     }
 
     override func draw(_ dirtyRect: NSRect) {
