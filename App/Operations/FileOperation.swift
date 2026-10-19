@@ -48,6 +48,8 @@ protocol FileOperation: Sendable {
     var symbol: String { get }
     /// Long-running ffmpeg work, limited to a few concurrent jobs (§5.6).
     var usesMediaEngine: Bool { get }
+    /// Pill text while the job runs, e.g. "Conversion en PNG".
+    var progressTitle: String { get }
     /// Groups this operation with others behind a sub-wheel segment.
     var group: OperationGroup? { get }
     /// Text of the confirmation pill, nil for none (the action shows its own result).
@@ -63,6 +65,13 @@ extension FileOperation {
     var segment: WheelSegment { WheelSegment(id: id, title: title, symbol: symbol) }
     var usesMediaEngine: Bool { false }
     var group: OperationGroup? { nil }
+
+    var progressTitle: String {
+        switch kind {
+        case .convert: "Conversion en \(title)"
+        case .tools, .actions: title
+        }
+    }
 
     func completionMessage(inputs: [URL], outputs: [URL]) -> String? {
         outputs.count == 1 ? "\(outputs[0].lastPathComponent) créé" : "\(outputs.count) fichiers créés"

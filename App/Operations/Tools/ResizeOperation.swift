@@ -44,6 +44,7 @@ struct ResizeOperation: FileOperation {
     var symbol: String { "aspectratio" }
     var group: OperationGroup? { Self.group }
     var usesMediaEngine: Bool { true }
+    var progressTitle: String { "Redimensionnement à \(preset.title)" }
 
     func accepts(_ types: [UTType]) -> Bool {
         !types.isEmpty && types.allSatisfy {

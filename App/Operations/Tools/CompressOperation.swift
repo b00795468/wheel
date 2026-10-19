@@ -19,6 +19,7 @@ struct CompressOperation: FileOperation {
     let title = "Compresser"
     let symbol = "arrow.down.right.and.arrow.up.left"
     var usesMediaEngine: Bool { true }
+    var progressTitle: String { "Compression" }
 
     /// BMP is left out: re-encoding it gains nothing.
     static func isCompressibleImage(_ type: UTType) -> Bool {

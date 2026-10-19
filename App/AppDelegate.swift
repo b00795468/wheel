@@ -21,6 +21,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let path = UserDefaults.standard.string(forKey: "debugSettingsSnapshot") {
             DebugSnapshot.render(SettingsView(model: settings), size: CGSize(width: 520, height: 660), to: path)
         }
+        if let path = UserDefaults.standard.string(forKey: "debugHUDSnapshot") {
+            HUDToast.debugSnapshot(state: UserDefaults.standard.string(forKey: "debugHUDState") ?? "success", to: path)
+        }
         if let path = UserDefaults.standard.string(forKey: "debugOnboardingSnapshot") {
             let page = UserDefaults.standard.integer(forKey: "debugOnboardingPage")
             DebugSnapshot.render(OnboardingView(model: settings, page: page) { _ in },

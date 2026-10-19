@@ -40,4 +40,11 @@ final class ActionTests: XCTestCase {
         XCTAssertEqual(operation.completionMessage(inputs: [], outputs: [URL(fileURLWithPath: "/o/a"), URL(fileURLWithPath: "/o/b")]),
                        "2 fichiers créés")
     }
+
+    func testProgressTitlesNameTheWork() {
+        XCTAssertEqual(ConvertToImageOperation(format: .png, acceptsPDF: true).progressTitle, "Conversion en PNG")
+        XCTAssertEqual(CompressOperation().progressTitle, "Compression")
+        XCTAssertEqual(ResizeOperation(preset: .long1920).progressTitle, "Redimensionnement à \(ResizePreset.long1920.title)")
+        XCTAssertEqual(CopyPathAction().progressTitle, "Copier le chemin")
+    }
 }

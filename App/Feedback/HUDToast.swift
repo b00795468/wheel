@@ -2,12 +2,16 @@ import AppKit
 
 /// Pills stacked at the bottom-right of the screen reporting jobs (§5.6):
 /// progress with a cancel button once a job runs over a second, then
-/// "x créé" (click to reveal in Finder) or a human error message.
+/// "x créé" (click to reveal in Finder) or a human error message. Each
+/// outcome is also spoken to VoiceOver, and a pill under the pointer stays.
 @MainActor
 final class HUDController {
     static let progressDelay: TimeInterval = 1
     static let successDuration: TimeInterval = 3
+    static let noticeDuration: TimeInterval = 4
     static let failureDuration: TimeInterval = 5
+    /// While the pointer rests on a pill, its removal waits this long again.
+    private static let hoverGrace: TimeInterval = 1
     private static let margin: CGFloat = 16
     private static let spacing: CGFloat = 8
 
@@ -26,12 +30,14 @@ final class HUDController {
     func succeed(_ toast: HUDToast, message: String, outputs: [URL], symbol: String) {
         toast.showSuccess(message: message, outputs: outputs, symbol: symbol)
         present(toast)
+        Announcer.say(message)
         remove(toast, after: Self.successDuration)
     }
 
     func fail(_ toast: HUDToast, message: String) {
         toast.showFailure(message: message)
         present(toast)
+        Announcer.say(message)
         remove(toast, after: Self.failureDuration)
     }
 
@@ -39,27 +45,31 @@ final class HUDController {
         remove(toast, after: 0)
     }
 
-    /// A short notice that is not about a job (keyboard mode problems).
+    /// A short notice that is not about a job (keyboard mode, onboarding).
     func inform(_ message: String, symbol: String) {
         let toast = HUDToast(onCancel: {})
         toast.showSuccess(message: message, outputs: [], symbol: symbol)
         present(toast)
-        remove(toast, after: Self.failureDuration)
+        Announcer.say(message)
+        remove(toast, after: Self.noticeDuration)
     }
 
     private func present(_ toast: HUDToast) {
-        if !visible.contains(where: { $0 === toast }) {
-            visible.append(toast)
-        }
+        let isNew = !visible.contains { $0 === toast }
+        if isNew { visible.append(toast) }
         layout()
-        toast.panel.orderFrontRegardless()
+        if isNew { toast.appear() }
     }
 
     private func remove(_ toast: HUDToast, after delay: TimeInterval) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-            guard let self else { return }
+            guard let self, self.visible.contains(where: { $0 === toast }) else { return }
+            if delay > 0, toast.isHovered {
+                self.remove(toast, after: Self.hoverGrace)
+                return
+            }
             self.visible.removeAll { $0 === toast }
-            toast.close()
+            toast.disappear()
             self.layout()
         }
     }
@@ -82,13 +92,19 @@ final class HUDController {
 /// One pill: a non-activating panel, so it never steals focus.
 @MainActor
 final class HUDToast {
-    static let size = NSSize(width: 300, height: 56)
+    static let size = NSSize(width: 320, height: 64)
+    /// Entrance: a short rise with a fade; Reduce Motion keeps the fade only.
+    private static let appearDuration: TimeInterval = 0.18
+    private static let disappearDuration: TimeInterval = 0.12
+    private static let rise: CGFloat = 8
 
     let panel: NSPanel
     private let content: HUDToastView
     private let onCancel: () -> Void
     private var outputs: [URL] = []
     private(set) var isRunning = true
+
+    var isHovered: Bool { content.isHovered }
 
     init(onCancel: @escaping () -> Void) {
         self.onCancel = onCancel
@@ -108,8 +124,8 @@ final class HUDToast {
     }
 
     func showProgress(title: String, symbol: String) {
-        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: title)
-        content.configure(icon: image, tint: .labelColor, text: "\(title)…", progress: 0)
+        content.configure(icon: NSImage(systemSymbolName: symbol, accessibilityDescription: nil), tint: .labelColor,
+                          text: "\(title)…", progress: 0, clickable: false)
     }
 
     func setProgress(_ fraction: Double) {
@@ -121,18 +137,43 @@ final class HUDToast {
         isRunning = false
         self.outputs = outputs
         let icon = outputs.first.map { NSWorkspace.shared.icon(forFile: $0.path) }
-            ?? NSImage(systemSymbolName: symbol, accessibilityDescription: message)
-        content.configure(icon: icon, tint: outputs.isEmpty ? .labelColor : nil, text: message, progress: nil)
+            ?? NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
+        content.configure(icon: icon, tint: outputs.isEmpty ? .labelColor : nil, text: message, progress: nil,
+                          clickable: !outputs.isEmpty)
     }
 
+    /// The triangle carries the meaning; the colour stays neutral (one accent only, §6).
     func showFailure(message: String) {
         isRunning = false
-        let icon = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: message)
-        content.configure(icon: icon, tint: .systemOrange, text: message, progress: nil)
+        content.configure(icon: NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: nil),
+                          tint: .labelColor, text: message, progress: nil, clickable: false)
     }
 
-    func close() {
-        panel.orderOut(nil)
+    func appear() {
+        let target = panel.frame.origin
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        panel.alphaValue = 0
+        if !reduceMotion {
+            panel.setFrameOrigin(CGPoint(x: target.x, y: target.y - Self.rise))
+        }
+        panel.orderFrontRegardless()
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Self.appearDuration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel.animator().alphaValue = 1
+            if !reduceMotion {
+                panel.animator().setFrameOrigin(target)
+            }
+        }
+    }
+
+    func disappear() {
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = Self.disappearDuration
+            panel.animator().alphaValue = 0
+        } completionHandler: {
+            MainActor.assumeIsolated { self.panel.orderOut(nil) }
+        }
     }
 
     private func reveal() {
@@ -149,13 +190,19 @@ final class HUDToast {
 
 @MainActor
 private final class HUDToastView: NSView {
+    private static let leading: CGFloat = 56
+    private static let iconSide: CGFloat = 32
+    private static let cancelSide: CGFloat = 24
+
     var onClick: (() -> Void)?
     var onCancel: (() -> Void)?
+    private(set) var isHovered = false
+    private var isClickable = false
 
     private let material = NSVisualEffectView()
     private let icon = NSImageView()
-    private let label = NSTextField(labelWithString: "")
-    private let bar = NSProgressIndicator()
+    private let label = NSTextField(wrappingLabelWithString: "")
+    private let bar = ProgressCapsule()
     private let cancelButton = NSButton()
 
     override init(frame: NSRect) {
@@ -165,57 +212,135 @@ private final class HUDToastView: NSView {
         material.blendingMode = .behindWindow
         material.state = .active
         material.wantsLayer = true
-        material.layer?.cornerRadius = 12
+        material.layer?.cornerRadius = 14
         material.layer?.masksToBounds = true
         addSubview(material)
 
-        icon.frame = NSRect(x: 12, y: 12, width: 32, height: 32)
+        icon.frame = NSRect(x: 14, y: (bounds.height - Self.iconSide) / 2, width: Self.iconSide, height: Self.iconSide)
+        icon.setAccessibilityElement(false)
         label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.lineBreakMode = .byTruncatingMiddle
-        bar.style = .bar
-        bar.isIndeterminate = false
-        bar.minValue = 0
-        bar.maxValue = 1
-        bar.controlSize = .small
-        bar.frame = NSRect(x: 54, y: 13, width: bounds.width - 54 - 44, height: 12)
+        label.lineBreakMode = .byWordWrapping
+        label.cell?.truncatesLastVisibleLine = true
+        label.setAccessibilityElement(false)
         cancelButton.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Annuler")
+        cancelButton.toolTip = "Annuler"
         cancelButton.isBordered = false
         cancelButton.contentTintColor = .secondaryLabelColor
-        cancelButton.frame = NSRect(x: bounds.width - 36, y: 16, width: 24, height: 24)
+        cancelButton.frame = NSRect(x: bounds.width - 36, y: (bounds.height - Self.cancelSide) / 2,
+                                    width: Self.cancelSide, height: Self.cancelSide)
         cancelButton.target = self
         cancelButton.action = #selector(cancelPressed)
         [icon, label, bar, cancelButton].forEach(addSubview)
+        setAccessibilityElement(true)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
-    /// `progress` nil hides the bar and the cancel button.
-    func configure(icon image: NSImage?, tint: NSColor?, text: String, progress: Double?) {
+    /// `progress` nil hides the bar and the cancel button and lets the text use two lines.
+    func configure(icon image: NSImage?, tint: NSColor?, text: String, progress: Double?, clickable: Bool) {
         icon.image = image
         icon.contentTintColor = tint
         label.stringValue = text
+        isClickable = clickable
         let running = progress != nil
         bar.isHidden = !running
         cancelButton.isHidden = !running
-        bar.doubleValue = progress ?? 0
-        let textWidth = bounds.width - 54 - (running ? 44 : 14)
-        label.frame = running
-            ? NSRect(x: 54, y: 29, width: textWidth, height: 16)
-            : NSRect(x: 54, y: 20, width: textWidth, height: 16)
+        bar.fraction = progress ?? 0
+        let width = bounds.width - Self.leading - (running ? 48 : 16)
+        if running {
+            label.maximumNumberOfLines = 1
+            label.frame = NSRect(x: Self.leading, y: 30, width: width, height: 16)
+            bar.frame = NSRect(x: Self.leading, y: 20, width: width, height: 4)
+        } else {
+            label.maximumNumberOfLines = 2
+            let height = min(ceil(label.sizeThatFits(NSSize(width: width, height: 40)).height), 32)
+            label.frame = NSRect(x: Self.leading, y: (bounds.height - height) / 2, width: width, height: height)
+        }
+        setAccessibilityLabel(text)
+        setAccessibilityRole(clickable ? .button : .staticText)
+        setAccessibilityHelp(clickable ? "Afficher dans le Finder" : nil)
     }
 
     func setProgress(_ fraction: Double) {
-        bar.doubleValue = fraction
+        bar.fraction = fraction
+    }
+
+    // The panel belongs to an inactive app: cursor rects do not apply, a
+    // tracking area with cursor updates does.
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        addTrackingArea(NSTrackingArea(rect: bounds, options: [.mouseEnteredAndExited, .cursorUpdate, .activeAlways],
+                                       owner: self))
+    }
+
+    override func mouseEntered(with event: NSEvent) { isHovered = true }
+    override func mouseExited(with event: NSEvent) { isHovered = false }
+
+    override func cursorUpdate(with event: NSEvent) {
+        (isClickable ? NSCursor.pointingHand : NSCursor.arrow).set()
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 
     override func mouseDown(with event: NSEvent) {
+        if isClickable { onClick?() }
+    }
+
+    override func accessibilityPerformPress() -> Bool {
+        guard isClickable else { return false }
         onClick?()
+        return true
     }
 
     @objc private func cancelPressed() {
         onCancel?()
     }
 }
+
+/// Thin progress bar in the accent colour (§6: the accent marks progress).
+@MainActor
+private final class ProgressCapsule: NSView {
+    var fraction: Double = 0 {
+        didSet { needsDisplay = true }
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let radius = bounds.height / 2
+        NSColor.quaternaryLabelColor.setFill()
+        NSBezierPath(roundedRect: bounds, xRadius: radius, yRadius: radius).fill()
+        let width = bounds.width * min(max(fraction, 0), 1)
+        guard width > 0 else { return }
+        Theme.accent.setFill()
+        NSBezierPath(roundedRect: NSRect(x: 0, y: 0, width: max(width, bounds.height), height: bounds.height),
+                     xRadius: radius, yRadius: radius).fill()
+    }
+}
+
+#if DEBUG
+extension HUDToast {
+    /// Offscreen render of one pill state, to check its layout without capture rights.
+    static func debugSnapshot(state: String, to path: String) {
+        let toast = HUDToast(onCancel: {})
+        switch state {
+        case "progress":
+            toast.showProgress(title: "Conversion en PNG", symbol: "photo")
+            toast.setProgress(0.42)
+        case "failure":
+            toast.showFailure(message: "Le moteur audio et vidéo est introuvable. Réinstallez l’application.")
+        case "notice":
+            toast.showSuccess(message: "Pivot est prêt\u{202F}: glissez un fichier, puis appuyez brièvement sur ⇧\u{00A0}Maj.",
+                              outputs: [], symbol: "checkmark.circle")
+        default:
+            toast.showSuccess(message: "Vacances à la plage, été 2026.png créé", outputs: [URL(fileURLWithPath: "/etc/hosts")],
+                              symbol: "photo")
+        }
+        let view = toast.content
+        view.appearance = NSApp.effectiveAppearance
+        guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+        view.cacheDisplay(in: view.bounds, to: rep)
+        try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
+    }
+}
+#endif

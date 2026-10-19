@@ -32,7 +32,7 @@ final class JobQueue {
         let context = OperationContext(output: OutputLocator(destination: SettingsStore.outputDestination),
                                        stripsLocation: SettingsStore.stripsLocation, ffmpeg: ffmpeg,
                                        quality: SettingsStore.outputQuality)
-        let toast = hud.begin(title: operation.title, symbol: operation.symbol) { [weak self] in
+        let toast = hud.begin(title: operation.progressTitle, symbol: operation.symbol) { [weak self] in
             self?.running[id]?.cancel()
         }
         let slots = operation.usesMediaEngine ? mediaSlots : nil
