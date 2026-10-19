@@ -1,11 +1,18 @@
 import AppKit
+import AudioToolbox
 
 /// Runs operations off the main thread and reports through the HUD (§5.6).
 /// New jobs never wait for running ones; the limit of two concurrent media
 /// jobs arrives with ffmpeg in phase 4.
 @MainActor
 final class JobQueue {
-    private static let completionSound = NSSound.Name("Pop")
+    /// Played through the system sound server: NSSound sets up a full audio
+    /// session, which makes macOS check microphone and capture permissions.
+    private static let completionSound: SystemSoundID = {
+        var sound: SystemSoundID = 0
+        AudioServicesCreateSystemSoundID(URL(fileURLWithPath: "/System/Library/Sounds/Pop.aiff") as CFURL, &sound)
+        return sound
+    }()
     private static let genericFailure = "La conversion a échoué."
 
     private let hud = HUDController()
@@ -44,7 +51,7 @@ final class JobQueue {
             AppInfo.jobLog.info("Job \(operation.id, privacy: .public) done: \(paths, privacy: .public)")
             hud.succeed(toast, outputs: outputs)
             if SettingsStore.playsCompletionSound {
-                NSSound(named: Self.completionSound)?.play()
+                AudioServicesPlaySystemSound(Self.completionSound)
             }
         case .failure(let error) where error is CancellationError:
             AppInfo.jobLog.info("Job \(operation.id, privacy: .public) cancelled")

@@ -44,6 +44,7 @@ enum SettingsStore {
 
     /// Discreet sound when a job finishes, on by default (§5.6).
     static var playsCompletionSound: Bool {
-        defaults.object(forKey: Key.playsCompletionSound) as? Bool ?? true
+        // bool(forKey:) also understands "NO"/"0" strings (launch arguments).
+        defaults.object(forKey: Key.playsCompletionSound) == nil ? true : defaults.bool(forKey: Key.playsCompletionSound)
     }
 }
