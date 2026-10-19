@@ -87,7 +87,7 @@ struct ResizeOperation: FileOperation {
         guard let image = ImageConverter.downscaledImage(from: source, maxPixelSize: longSide) else {
             throw OperationError.unreadableImage
         }
-        try await ImageRewriter.write(image, like: type, to: url, quality: nil,
+        try await ImageRewriter.write(image, like: type, to: url, quality: context.quality.imageQuality,
                                       properties: ImageConverter.metadata(of: source, stripsLocation: context.stripsLocation),
                                       ffmpeg: context.ffmpeg)
     }
@@ -112,7 +112,7 @@ struct ResizeOperation: FileOperation {
                                                     for: input) { temporary in
             var arguments = ["-i", input.path, "-map", "0:v:0", "-map", "0:a:0?", "-sn", "-dn",
                              "-vf", preset.videoFilter,
-                             "-c:v", "h264_videotoolbox", "-q:v", MediaOutput.videoQuality, "-pix_fmt", "yuv420p",
+                             "-c:v", "h264_videotoolbox", "-q:v", context.quality.videoQuality, "-pix_fmt", "yuv420p",
                              "-tag:v", "avc1"]
             arguments += probe.audioCodec == "aac" ? ["-c:a", "copy"] : ["-c:a", "aac_at", "-b:a", "192k"]
             if !isMOV { arguments += ["-movflags", "+faststart"] }

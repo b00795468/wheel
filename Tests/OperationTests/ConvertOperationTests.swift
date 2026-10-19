@@ -50,4 +50,21 @@ final class ConvertOperationTests: XCTestCase {
         } catch is CancellationError {}
         XCTAssertFalse(FileManager.default.fileExists(atPath: out.appending(path: "a.jpg").path))
     }
+
+    func testHighQualityGivesALargerJPEG() async throws {
+        let dir = try Fixtures.directory(for: self)
+        let input = try Fixtures.writeNoiseImage("noise.png", in: dir, type: .png)
+        func convert(_ quality: OutputQuality) async throws -> Int {
+            let context = OperationContext(output: OutputLocator(destination: .custom(dir.appending(path: quality.rawValue))),
+                                           stripsLocation: false, quality: quality)
+            let output = try await ConvertToImageOperation(format: .jpeg, acceptsPDF: true)
+                .run(inputs: [input], context: context) { _ in }[0]
+            return try XCTUnwrap(output.resourceValues(forKeys: [.fileSizeKey]).fileSize)
+        }
+
+        let standard = try await convert(.standard)
+        let high = try await convert(.high)
+
+        XCTAssertGreaterThan(high, standard)
+    }
 }

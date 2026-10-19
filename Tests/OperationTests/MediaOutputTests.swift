@@ -20,7 +20,7 @@ final class MediaOutputTests: XCTestCase {
     func testOtherCodecsAreReencodedWithVideoToolbox() throws {
         for probe in [hevcPCM, h264AAC] {
             let arguments = try MediaOutput.mov.codecArguments(for: probe, allowStreamCopy: probe == hevcPCM)
-            XCTAssertTrue(has(arguments, ["-c:v", "h264_videotoolbox", "-q:v", MediaOutput.videoQuality]))
+            XCTAssertTrue(has(arguments, ["-c:v", "h264_videotoolbox", "-q:v", OutputQuality.standard.videoQuality]))
             XCTAssertTrue(has(arguments, ["-c:a", "aac_at", "-b:a", "192k"]))
             XCTAssertFalse(arguments.contains("-movflags"), "faststart is for MP4 only")
         }
@@ -56,5 +56,11 @@ final class MediaOutputTests: XCTestCase {
                 XCTAssertEqual($0 as? OperationError, .noVideo)
             }
         }
+    }
+
+    func testHighQualityRaisesTheVideoQuality() throws {
+        let arguments = try MediaOutput.mp4.codecArguments(for: hevcPCM, allowStreamCopy: true, quality: .high)
+        XCTAssertTrue(has(arguments, ["-q:v", OutputQuality.high.videoQuality]))
+        XCTAssertEqual(OutputQuality.high.videoQuality, "80")
     }
 }

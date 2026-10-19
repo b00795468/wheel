@@ -27,6 +27,8 @@ struct OperationContext: Sendable {
     let stripsLocation: Bool
     /// The embedded ffmpeg, nil when the app bundle lacks it.
     var ffmpeg: FFmpegRunner? = nil
+    /// Encoder quality of conversions ("Qualité par défaut").
+    var quality: OutputQuality = .standard
 }
 
 /// Operations shown together behind one segment that opens a sub-wheel.

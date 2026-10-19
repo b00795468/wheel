@@ -22,6 +22,7 @@ struct ConvertToImageOperation: FileOperation {
 
     func run(inputs: [URL], context: OperationContext,
              progress: @escaping @Sendable (Double) -> Void) async throws -> [URL] {
+        let format = self.format.withQuality(context.quality.imageQuality)
         var outputs: [URL] = []
         for (index, input) in inputs.enumerated() {
             try Task.checkCancellation()

@@ -4,8 +4,6 @@ import UniformTypeIdentifiers
 
 /// "WebP": images to WebP through the embedded ffmpeg (§3), see WebPEncoder.
 struct ImageToWebPOperation: FileOperation {
-    static let quality = 90
-
     let id = "convert.webp"
     let kind = WheelMode.convert
     let title = "WebP"
@@ -27,7 +25,7 @@ struct ImageToWebPOperation: FileOperation {
             }
             outputs.append(try await context.output.commitAsync(baseName: input.baseName, fileExtension: "webp",
                                                                 for: input) { temporary in
-                try await WebPEncoder.encode(image, quality: Self.quality, to: temporary, with: ffmpeg)
+                try await WebPEncoder.encode(image, quality: context.quality.webPQuality, to: temporary, with: ffmpeg)
             })
             progress(Double(index + 1) / Double(inputs.count))
         }

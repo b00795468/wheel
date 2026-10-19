@@ -41,8 +41,8 @@ struct MediaConvertOperation: FileOperation {
         } catch let error as FFmpegError {
             throw unreadable.withDetail(error.description)
         }
-        let rewrap = try output.codecArguments(for: probe, allowStreamCopy: true)
-        let reencode = try output.codecArguments(for: probe, allowStreamCopy: false)
+        let rewrap = try output.codecArguments(for: probe, allowStreamCopy: true, quality: context.quality)
+        let reencode = try output.codecArguments(for: probe, allowStreamCopy: false, quality: context.quality)
 
         return try await context.output.commitAsync(baseName: input.baseName, fileExtension: output.fileExtension,
                                                     for: input) { temporary in

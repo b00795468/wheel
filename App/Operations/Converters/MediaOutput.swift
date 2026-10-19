@@ -5,8 +5,6 @@ import UniformTypeIdentifiers
 enum MediaOutput: String, CaseIterable, Sendable {
     case mp4, mov, gif, mp3, m4a, wav, flac
 
-    /// h264_videotoolbox constant quality (1–100): clean picture, sensible size.
-    static let videoQuality = "65"
     static let gifFrameRate = 15
     static let gifMaxWidth = 720
 
@@ -56,14 +54,14 @@ enum MediaOutput: String, CaseIterable, Sendable {
     /// ffmpeg arguments between the input and the output file, chosen from
     /// what ffprobe found. `allowStreamCopy` rewraps streams that already
     /// have the target codec instead of re-encoding them (instant, lossless).
-    func codecArguments(for probe: MediaProbe, allowStreamCopy: Bool) throws -> [String] {
+    func codecArguments(for probe: MediaProbe, allowStreamCopy: Bool, quality: OutputQuality = .standard) throws -> [String] {
         switch self {
         case .mp4, .mov:
             guard let video = probe.videoCodec else { throw OperationError.noVideo }
             var arguments = ["-map", "0:v:0", "-map", "0:a:0?", "-sn", "-dn"]
             arguments += allowStreamCopy && video == "h264"
                 ? ["-c:v", "copy"]
-                : ["-c:v", "h264_videotoolbox", "-q:v", Self.videoQuality, "-pix_fmt", "yuv420p"]
+                : ["-c:v", "h264_videotoolbox", "-q:v", quality.videoQuality, "-pix_fmt", "yuv420p"]
             arguments += allowStreamCopy && probe.audioCodec == "aac"
                 ? ["-c:a", "copy"]
                 : ["-c:a", "aac_at", "-b:a", "192k"]

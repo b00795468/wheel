@@ -30,7 +30,8 @@ final class JobQueue {
     func run(_ operation: any FileOperation, inputs: [URL]) {
         let id = UUID()
         let context = OperationContext(output: OutputLocator(destination: SettingsStore.outputDestination),
-                                       stripsLocation: SettingsStore.stripsLocation, ffmpeg: ffmpeg)
+                                       stripsLocation: SettingsStore.stripsLocation, ffmpeg: ffmpeg,
+                                       quality: SettingsStore.outputQuality)
         let toast = hud.begin(title: operation.title, symbol: operation.symbol) { [weak self] in
             self?.running[id]?.cancel()
         }
