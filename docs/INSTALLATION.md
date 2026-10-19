@@ -13,22 +13,22 @@ Pivot ne vient pas de l’App Store : la première fois, macOS le bloque par p
 
 1. Dans **Applications**, double-cliquez sur **Pivot**. Un message dit qu’Apple n’a pas pu vérifier l’app. Cliquez sur **Terminé** (ou **OK**).
 2. Ouvrez **Réglages Système** (menu Apple › Réglages Système…), puis **Confidentialité et sécurité** dans la colonne de gauche.
-3. Descendez jusqu’à la ligne « **Pivot a été bloqué…** » et cliquez sur **Ouvrir quand même**.
+3. Descendez jusqu’à la ligne « **Pivot a été bloqué…** » et cliquez sur **Ouvrir quand même**.
 4. Tapez votre mot de passe de session si on vous le demande, puis cliquez sur **Ouvrir**.
 
 Vous n’aurez à faire cela qu’une seule fois.
 
 ## 3. Suivre la présentation
 
-Au premier lancement, une fenêtre « Bienvenue dans Pivot » s’ouvre.
+Au premier lancement, une fenêtre « Bienvenue dans Pivot » s’ouvre.
 
 - **Écran 1** : le geste, en animation.
 - **Écran 2** : les autorisations.
-  - **Accessibilité (indispensable)** : cliquez sur **Autoriser…**. Dans la fenêtre de Réglages Système qui s’ouvre, activez l’interrupteur à côté de **Pivot**. Revenez à la présentation : la ligne passe à « Autorisé » toute seule.
+  - **Accessibilité (indispensable)** : cliquez sur **Autoriser…**, puis, dans la fenêtre de Réglages Système qui s’ouvre, activez l’interrupteur à côté de **Pivot**. Revenez à la présentation : la ligne passe à « Autorisé » toute seule.
   - **Contrôle du Finder (facultatif)** : sert seulement au raccourci clavier. Cliquez sur **Autoriser…** puis sur **OK** dans le message de macOS.
-- **Écran 3** : choisissez où ranger les fichiers convertis (par défaut : **Téléchargements › Convertis**) et laissez « Ouvrir Pivot au démarrage » coché. Cliquez sur **Terminer**.
+- **Écran 3** : choisissez où ranger les fichiers convertis (par défaut : **Téléchargements › Convertis**) et laissez « Ouvrir Pivot au démarrage » coché. Cliquez sur **Terminer**.
 
-Une petite bulle « Pivot est prêt » apparaît en bas à droite de l’écran. Pivot n’a ni icône dans le Dock ni dans la barre des menus : il attend simplement votre geste.
+Une petite bulle « Pivot est prêt » apparaît en bas à droite de l’écran. Pivot n’a ni icône dans le Dock ni dans la barre des menus : il attend simplement votre geste.
 
 ## 4. Le geste
 
@@ -49,7 +49,7 @@ Une petite bulle « Pivot est prêt » apparaît en bas à droite de l’écran.
 
 ## 5. Réglages et quitter
 
-- **Ouvrir les réglages** : ouvrez Pivot à nouveau (dossier Applications, ou ⌘ Espace puis tapez « Pivot »).
+- **Ouvrir les réglages** : ouvrez Pivot à nouveau (dossier Applications, ou ⌘ Espace puis tapez « Pivot »).
 - **Quitter** : dans les réglages, bouton **Quitter Pivot** en bas à droite. Pour le relancer, ouvrez-le simplement.
 
 ## 6. Si la roue n’apparaît pas

@@ -1,0 +1,13 @@
+@page { size: A4; margin: 15mm 17mm 16mm; }
+body { font: 10.5pt/1.45 -apple-system, "Helvetica Neue", sans-serif; color: #1d1d1f; max-width: none; }
+h1 { font-size: 22pt; margin: 0 0 6pt; }
+h2 { font-size: 14pt; margin: 14pt 0 5pt; page-break-after: avoid; }
+p, li { orphans: 3; widows: 3; }
+col { width: auto !important; }
+table { table-layout: auto; border-collapse: collapse; width: 100%; margin: 8pt 0; page-break-inside: avoid; }
+th, td { border-bottom: 1px solid #d2d2d7; padding: 5pt 8pt; text-align: left; }
+th { font-weight: 600; }
+th:nth-child(1), td:nth-child(1) { width: 24%; white-space: nowrap; }
+th:nth-child(2), td:nth-child(2) { width: 18%; }
+strong { font-weight: 600; }
+header#title-block-header { display: none; }
