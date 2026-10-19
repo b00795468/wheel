@@ -114,7 +114,7 @@ final class WheelController {
     private func reloadItems() {
         setHoveredSlot(nil)
         guard let model else { return }
-        titleView.setMode(model.mode, title: model.title)
+        titleView.setMode(model.mode, title: model.title, triggers: SettingsStore.triggers)
         wheelView.setItems(model.items, emptyMessage: model.mode.emptyMessage)
     }
 

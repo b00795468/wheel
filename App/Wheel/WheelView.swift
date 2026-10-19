@@ -293,7 +293,7 @@ final class WheelTitleView: NSView {
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
-    func setMode(_ mode: WheelMode, title: String? = nil) {
+    func setMode(_ mode: WheelMode, title: String? = nil, triggers: TriggerMapping = .standard) {
         let text = NSMutableAttributedString(
             string: title ?? mode.title,
             attributes: [.font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: NSColor.labelColor]
@@ -301,7 +301,7 @@ final class WheelTitleView: NSView {
         for other in WheelMode.allCases {
             let current = other == mode
             text.append(NSAttributedString(
-                string: "  " + other.trigger.glyph,
+                string: "  " + triggers.key(for: other).glyph,
                 attributes: [
                     .font: NSFont.systemFont(ofSize: 11, weight: current ? .semibold : .regular),
                     .foregroundColor: current ? NSColor.labelColor : NSColor.tertiaryLabelColor,

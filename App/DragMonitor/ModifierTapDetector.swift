@@ -1,7 +1,7 @@
 import AppKit
 
 /// A modifier key that can open a wheel when tapped during a drag.
-enum TriggerKey: CaseIterable {
+enum TriggerKey: String, CaseIterable, Codable, Sendable {
     case shift, command, control, option
 
     var flag: NSEvent.ModifierFlags {
@@ -20,6 +20,16 @@ enum TriggerKey: CaseIterable {
         case .command: "⌘"
         case .control: "⌃"
         case .option: "⌥"
+        }
+    }
+
+    /// Label in Settings.
+    var name: String {
+        switch self {
+        case .shift: "⇧ Maj"
+        case .command: "⌘ Commande"
+        case .control: "⌃ Contrôle"
+        case .option: "⌥ Option"
         }
     }
 

@@ -77,6 +77,8 @@ targets:
       - App/Operations
       - App/Output/OutputLocator.swift
       - App/Output/AsyncSemaphore.swift
+      - App/Settings/SettingsStore.swift
+      - App/Settings/KeyCombo.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: local.pivot.tests

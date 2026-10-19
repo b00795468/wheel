@@ -12,15 +12,6 @@ enum WheelMode: CaseIterable {
         }
     }
 
-    /// Default mapping (§5.1). Becomes remappable in Settings in phase 6.
-    var trigger: TriggerKey {
-        switch self {
-        case .convert: .shift
-        case .tools: .command
-        case .actions: .control
-        }
-    }
-
     /// Shown on the ring when no segment applies (§5.2).
     var emptyMessage: String {
         switch self {
@@ -29,9 +20,45 @@ enum WheelMode: CaseIterable {
         case .actions: "Aucune action pour ce type"
         }
     }
+}
 
-    static func mode(for key: TriggerKey) -> WheelMode? {
-        allCases.first { $0.trigger == key }
+/// Which modifier opens which wheel (§5.1). Remappable in Settings; the
+/// three keys always stay distinct.
+struct TriggerMapping: Equatable, Codable, Sendable {
+    var convert = TriggerKey.shift
+    var tools = TriggerKey.command
+    var actions = TriggerKey.control
+
+    static let standard = TriggerMapping()
+
+    func key(for mode: WheelMode) -> TriggerKey {
+        switch mode {
+        case .convert: convert
+        case .tools: tools
+        case .actions: actions
+        }
+    }
+
+    func mode(for key: TriggerKey) -> WheelMode? {
+        WheelMode.allCases.first { self.key(for: $0) == key }
+    }
+
+    /// Gives `key` to `mode`; the wheel that had `key` takes `mode`'s old key.
+    func assigning(_ key: TriggerKey, to mode: WheelMode) -> TriggerMapping {
+        var mapping = self
+        if let other = self.mode(for: key), other != mode {
+            mapping.set(self.key(for: mode), for: other)
+        }
+        mapping.set(key, for: mode)
+        return mapping
+    }
+
+    private mutating func set(_ key: TriggerKey, for mode: WheelMode) {
+        switch mode {
+        case .convert: convert = key
+        case .tools: tools = key
+        case .actions: actions = key
+        }
     }
 }
 

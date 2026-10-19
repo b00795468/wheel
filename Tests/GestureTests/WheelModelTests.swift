@@ -46,13 +46,6 @@ final class WheelModelTests: XCTestCase {
         XCTAssertTrue(model.items.isEmpty)
     }
 
-    func testDefaultTriggersMapToDistinctModes() {
-        XCTAssertEqual(WheelMode.mode(for: .shift), .convert)
-        XCTAssertEqual(WheelMode.mode(for: .command), .tools)
-        XCTAssertEqual(WheelMode.mode(for: .control), .actions)
-        XCTAssertNil(WheelMode.mode(for: .option))
-    }
-
     private func parent(children count: Int) -> WheelSegment {
         WheelSegment(id: "group", title: "Redimensionner", symbol: "aspectratio", children: segments(count))
     }

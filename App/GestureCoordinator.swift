@@ -48,7 +48,7 @@ final class GestureCoordinator {
     }
 
     private func modifierTapped(_ key: TriggerKey) {
-        guard let files = dragMonitor.draggedFiles, let mode = WheelMode.mode(for: key) else { return }
+        guard let files = dragMonitor.draggedFiles, let mode = SettingsStore.triggers.mode(for: key) else { return }
         if wheel.isVisible {
             wheel.switchMode(to: mode)
         } else {

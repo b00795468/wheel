@@ -1,6 +1,25 @@
 import Foundation
 import UniformTypeIdentifiers
 
+/// "Qualité par défaut" (§5.7) for conversions. Compression keeps its own
+/// fixed settings (§5.4).
+enum OutputQuality: String, CaseIterable, Sendable {
+    case standard, high
+
+    var title: String {
+        switch self {
+        case .standard: "Standard"
+        case .high: "Haute"
+        }
+    }
+
+    /// JPEG, HEIC and AVIF encoder quality.
+    var imageQuality: Double { self == .standard ? 0.9 : 0.97 }
+    var webPQuality: Int { self == .standard ? 90 : 97 }
+    /// h264_videotoolbox constant quality (1–100).
+    var videoQuality: String { self == .standard ? "65" : "80" }
+}
+
 /// What an operation needs besides its inputs.
 struct OperationContext: Sendable {
     let output: OutputLocator

@@ -22,8 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // The app has no Dock or menu bar icon: show Settings once so the
         // first launch is not silent. Onboarding replaces this in phase 6.
-        if !SettingsStore.hasCompletedFirstLaunch {
-            SettingsStore.hasCompletedFirstLaunch = true
+        if !SettingsStore.hasCompletedOnboarding {
+            SettingsStore.hasCompletedOnboarding = true
             settingsWindow.show()
         }
     }
