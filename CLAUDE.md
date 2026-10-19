@@ -10,7 +10,7 @@
 | Phase | État |
 |---|---|
 | §2 Environnement | ✅ macOS 27.0.1, arm64, Xcode 27.1, Homebrew 7.0.9, XcodeGen installé |
-| 1. Squelette | 🟡 Code écrit ; correctif Swift 6 poussé, pas encore compilé avec succès |
+| 1. Squelette | ✅ Compile (Debug), testée : lancement LSUIElement, Réglages au 1er lancement et à la réouverture (sur l’espace actif), bouton Quitter, CPU 0 % au repos |
 | 2 à 8 | ⏳ Pas commencées |
 
 ## Décisions en attente

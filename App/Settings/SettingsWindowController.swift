@@ -15,6 +15,9 @@ final class SettingsWindowController: NSWindowController {
         window.title = "Réglages"
         window.contentViewController = NSHostingController(rootView: SettingsView())
         window.isReleasedWhenClosed = false
+        // Reopening from another Space must bring the window here, not
+        // switch the user back to the Space it was first shown on.
+        window.collectionBehavior.insert(.moveToActiveSpace)
         window.center()
         self.init(window: window)
     }
