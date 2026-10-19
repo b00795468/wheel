@@ -5,8 +5,12 @@ import AppKit
 /// out are relative to the wheel centre (y up), see `WheelGeometry`.
 @MainActor
 final class WheelView: NSView {
-    /// Square side: the ring plus room for a hovered slot to grow.
-    static let side = ceil(2 * WheelGeometry.outerRadius * Theme.hoverScale) + 8
+    /// Square side: the whole hit disc, which leaves room for a hovered slot to grow.
+    static let side = 2 * WheelGeometry.hitRadius
+
+    /// The window server sends drags in fully transparent pixels to the
+    /// window below, so the hit disc gets an all but invisible fill.
+    private static let hitDiscFill = NSColor.black.withAlphaComponent(0.01)
 
     private let material = NSVisualEffectView()
     private let centerView = WheelCenterView()
@@ -59,6 +63,11 @@ final class WheelView: NSView {
 
     func setFiles(_ files: [URL]) {
         centerView.setFiles(files)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        Self.hitDiscFill.setFill()
+        NSBezierPath(ovalIn: bounds).fill()
     }
 
     private static func discMask(radius: CGFloat) -> NSImage {

@@ -6,6 +6,9 @@ import Foundation
 struct WheelGeometry {
     static let outerRadius: CGFloat = 140   // ~280 pt diameter (§5.2)
     static let innerRadius: CGFloat = 54    // neutral centre / cancel zone
+    /// Slots accept the drag up to here, beyond the drawn ring, so the edge
+    /// of a hovered slot (grown by 6 %, ~148 pt) is never a dead zone.
+    static let hitRadius: CGFloat = 152
 
     enum Hit: Equatable {
         case center
@@ -19,7 +22,7 @@ struct WheelGeometry {
 
     func hit(_ point: CGPoint) -> Hit {
         let distance = hypot(point.x, point.y)
-        if distance > Self.outerRadius { return .outside }
+        if distance > Self.hitRadius { return .outside }
         if distance < Self.innerRadius || slotCount == 0 { return .center }
         // Clockwise angle from the top, shifted by half a slot so that
         // slot 0 spans [-half, +half] around 12 o'clock.
