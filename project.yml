@@ -79,6 +79,7 @@ targets:
       - App/Output/AsyncSemaphore.swift
       - App/Settings/SettingsStore.swift
       - App/Settings/KeyCombo.swift
+      - App/Keyboard/FinderSelection.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: local.pivot.tests

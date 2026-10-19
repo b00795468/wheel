@@ -13,6 +13,9 @@ final class GestureCoordinator {
     private let wheel = WheelController()
     private var tapDetector = ModifierTapDetector()
     private var keyMonitor: Any?
+    /// Accessibility is polled at this pace only while it is missing.
+    private static let accessibilityPollInterval: TimeInterval = 2
+    private var accessibilityTimer: Timer?
     private let registry = OperationRegistry.standard
     private let jobs = JobQueue()
 
@@ -27,8 +30,30 @@ final class GestureCoordinator {
         dragMonitor.onFileDragEnded = { [weak self] in self?.fileDragEnded() }
         dragMonitor.start()
 
+        installKeyMonitor()
+        watchAccessibilityUntilGranted()
+    }
+
+    private func installKeyMonitor() {
+        if let keyMonitor {
+            NSEvent.removeMonitor(keyMonitor)
+        }
         keyMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.flagsChanged, .keyDown]) { [weak self] event in
             MainActor.assumeIsolated { self?.handleKey(event) }
+        }
+    }
+
+    /// Key monitors added before Accessibility is granted can stay deaf, so
+    /// the monitor is installed again once it is (§5.7 "détection automatique").
+    private func watchAccessibilityUntilGranted() {
+        guard !PermissionsManager.isAccessibilityTrusted else { return }
+        accessibilityTimer = Timer.scheduledTimer(withTimeInterval: Self.accessibilityPollInterval, repeats: true) { [weak self] timer in
+            MainActor.assumeIsolated {
+                guard PermissionsManager.isAccessibilityTrusted else { return }
+                timer.invalidate()
+                self?.installKeyMonitor()
+                AppInfo.log.info("Accessibility granted: key monitor installed again")
+            }
         }
     }
 
