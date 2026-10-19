@@ -17,7 +17,8 @@ final class ResizeOperationTests: XCTestCase {
         XCTAssertEqual(ResizePreset.long1280.targetLongSide(width: 1600, height: 1200), 1280)
         XCTAssertEqual(ResizePreset.long800.targetLongSide(width: 1200, height: 1600), 800)
         XCTAssertNil(ResizePreset.long1920.targetLongSide(width: 1600, height: 1200), "never enlarge")
-        XCTAssertEqual(ResizePreset.allCases.map(\.title), ["50 %", "1920 px", "1280 px", "800 px"])
+        XCTAssertEqual(ResizePreset.allCases.map(\.title), ["50\u{202F}%", "1920\u{00A0}px", "1280\u{00A0}px", "800\u{00A0}px"])
+        XCTAssertEqual(ResizePreset.allCases.map(\.fileSuffix), ["50 %", "1920 px", "1280 px", "800 px"])
     }
 
     func testHalfAnImage() async throws {
@@ -56,7 +57,7 @@ final class ResizeOperationTests: XCTestCase {
             _ = try await resize(input, .long1920, in: dir)
             XCTFail("expected an error")
         } catch let error as OperationError {
-            XCTAssertEqual(error, .alreadySmall(than: "1920 px"))
+            XCTAssertEqual(error, .alreadySmall(than: ResizePreset.long1920.title))
         }
     }
 
@@ -89,7 +90,7 @@ final class ResizeOperationTests: XCTestCase {
             _ = try await resize(input, .long1920, in: dir)
             XCTFail("expected an error")
         } catch let error as OperationError {
-            XCTAssertEqual(error, .alreadySmall(than: "1920 px"))
+            XCTAssertEqual(error, .alreadySmall(than: ResizePreset.long1920.title))
         }
     }
 }

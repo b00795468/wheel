@@ -14,8 +14,8 @@ enum MediaOutput: String, CaseIterable, Sendable {
     var symbol: String {
         switch self {
         case .mp4: "film"
-        case .mov: "film.stack"
-        case .gif: "rectangle.stack"
+        case .mov: "film"
+        case .gif: "photo.stack"
         case .mp3, .m4a: "music.note"
         case .wav, .flac: "waveform"
         }

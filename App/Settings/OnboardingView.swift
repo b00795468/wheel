@@ -53,7 +53,7 @@ struct OnboardingView: View {
         VStack(spacing: 16) {
             GestureAnimationView()
             Text("Glisser, taper, déposer").font(.title2.weight(.semibold))
-            Text("Commencez à glisser un fichier, tapez une touche : la roue s'ouvre autour du curseur. Lâchez le fichier sur une action.")
+            Text("Commencez à glisser un fichier, tapez une touche\u{202F}: la roue s’ouvre autour du curseur. Lâchez le fichier sur une action.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
             HStack(spacing: 18) {
@@ -70,15 +70,15 @@ struct OnboardingView: View {
     private var permissionsPage: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Autorisations").font(.title2.weight(.semibold))
-            Text("macOS demande votre accord pour que \(AppInfo.name) voie le geste. L'état se met à jour tout seul.")
+            Text("macOS demande votre accord pour que \(AppInfo.name) voie le geste. L’état se met à jour tout seul.")
                 .foregroundStyle(.secondary)
-            PermissionRow(title: "Accessibilité", detail: "Indispensable : détecte la touche tapée pendant le glisser.",
+            PermissionRow(title: "Accessibilité", detail: "Indispensable\u{202F}: détecte la touche tapée pendant le glisser.",
                           status: model.accessibilityGranted ? .granted : .denied,
                           action: PermissionsManager.grantAccessibility)
-            PermissionRow(title: "Contrôle du Finder", detail: "Facultatif : pour ouvrir la roue au clavier (\(model.hotKey.display)).",
+            PermissionRow(title: "Contrôle du Finder", detail: "Facultatif\u{202F}: pour ouvrir la roue au clavier (\(model.hotKey.display)).",
                           status: model.finderAutomation, action: model.requestFinderAutomation)
             if !model.accessibilityGranted {
-                Text("Sans l'Accessibilité, la roue ne peut pas s'ouvrir.")
+                Text("Sans l’Accessibilité, la roue ne peut pas s’ouvrir.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -88,8 +88,8 @@ struct OnboardingView: View {
 
     private var outputPage: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Où ranger les fichiers ?").font(.title2.weight(.semibold))
-            Text("Les originaux ne sont jamais modifiés : chaque résultat est un nouveau fichier.")
+            Text("Où ranger les fichiers\u{202F}?").font(.title2.weight(.semibold))
+            Text("Les originaux ne sont jamais modifiés\u{202F}: chaque résultat est un nouveau fichier.")
                 .foregroundStyle(.secondary)
             Picker("Dossier", selection: $model.destination) {
                 ForEach(SettingsModel.Destination.allCases, id: \.self) { Text($0.title).tag($0) }

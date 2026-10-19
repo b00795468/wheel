@@ -97,14 +97,14 @@ struct OperationError: LocalizedError, Equatable {
     static let unreadableImage = OperationError(message: "Cette image semble corrompue ou illisible.")
     static let unreadablePDF = OperationError(message: "Ce PDF semble corrompu ou illisible.")
     static let lockedPDF = OperationError(message: "Ce PDF est protégé par un mot de passe.")
-    static let writeFailed = OperationError(message: "Impossible d'enregistrer le fichier converti.")
+    static let writeFailed = OperationError(message: "Impossible d’enregistrer le fichier converti.")
     static let unreadableVideo = OperationError(message: "Ce fichier vidéo semble corrompu ou illisible.")
     static let unreadableAudio = OperationError(message: "Ce fichier audio semble corrompu ou illisible.")
     static let noAudio = OperationError(message: "Cette vidéo ne contient pas de son.")
-    static let noVideo = OperationError(message: "Ce fichier ne contient pas d'image vidéo.")
-    static let engineMissing = OperationError(message: "Le moteur audio et vidéo est introuvable. Réinstallez l'application.")
+    static let noVideo = OperationError(message: "Ce fichier ne contient pas d’image vidéo.")
+    static let engineMissing = OperationError(message: "Le moteur audio et vidéo est introuvable. Réinstallez l’application.")
     static let alreadyCompressed = OperationError(message: "Ce fichier est déjà compressé au mieux.")
-    static let airDropUnavailable = OperationError(message: "AirDrop n'est pas disponible. Vérifiez qu'il est activé.")
+    static let airDropUnavailable = OperationError(message: "AirDrop n’est pas disponible. Vérifiez qu’il est activé.")
 
     static func alreadySmall(than limit: String) -> OperationError {
         OperationError(message: "Ce fichier fait déjà moins de \(limit).")

@@ -7,7 +7,8 @@ struct AirDropAction: FileOperation {
     let id = "action.airdrop"
     let kind = WheelMode.actions
     let title = "AirDrop"
-    let symbol = "airplayaudio"
+    /// No public AirDrop symbol exists; the radio waves are its closest kin.
+    let symbol = "dot.radiowaves.left.and.right"
 
     func accepts(_ types: [UTType]) -> Bool { !types.isEmpty }
 

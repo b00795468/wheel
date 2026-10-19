@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 struct RevealAction: FileOperation {
     let id = "action.reveal"
     let kind = WheelMode.actions
-    let title = "Afficher dans le Finder"
+    let title = "Afficher dans le\u{00A0}Finder"
     let symbol = "folder"
 
     func accepts(_ types: [UTType]) -> Bool { !types.isEmpty }

@@ -17,7 +17,10 @@ enum ResizePreset: CaseIterable, Sendable {
     }
 
     var id: String { maxLongSide.map { String($0) } ?? "50" }
-    var title: String { maxLongSide.map { "\($0) px" } ?? "50 %" }
+    var title: String { maxLongSide.map { "\($0)\u{00A0}px" } ?? "50\u{202F}%" }
+    /// Suffix of output names, with plain spaces: invisible ones would make
+    /// the files hard to search or type in the Finder.
+    var fileSuffix: String { maxLongSide.map { "\($0) px" } ?? "50 %" }
 
     /// Longer side of the result, nil when the file is already small enough.
     func targetLongSide(width: Int, height: Int) -> Int? {
@@ -41,7 +44,8 @@ struct ResizeOperation: FileOperation {
     var id: String { "tool.resize.\(preset.id)" }
     var kind: WheelMode { .tools }
     var title: String { preset.title }
-    var symbol: String { "aspectratio" }
+    /// Label only: four identical icons would add nothing (the parent keeps one).
+    var symbol: String { "" }
     var group: OperationGroup? { Self.group }
     var usesMediaEngine: Bool { true }
     var progressTitle: String { "Redimensionnement à \(preset.title)" }
@@ -59,7 +63,7 @@ struct ResizeOperation: FileOperation {
             try Task.checkCancellation()
             let share: @Sendable (Double) -> Void = { progress((Double(index) + $0) / Double(inputs.count)) }
             let type = FileTypes.type(of: input)
-            let baseName = "\(input.baseName) (\(preset.title))"
+            let baseName = "\(input.baseName) (\(preset.fileSuffix))"
             if FileTypes.isVideo(type) {
                 outputs.append(try await resizeVideo(input, baseName: baseName, context: context, progress: share))
             } else {

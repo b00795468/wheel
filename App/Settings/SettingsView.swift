@@ -9,10 +9,10 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             Form {
                 Section("Autorisations") {
-                    PermissionRow(title: "Accessibilité", detail: "Indispensable : détecte le geste.",
+                    PermissionRow(title: "Accessibilité", detail: "Indispensable\u{202F}: détecte le geste.",
                                   status: model.accessibilityGranted ? .granted : .denied,
                                   action: PermissionsManager.grantAccessibility)
-                    PermissionRow(title: "Contrôle du Finder", detail: "Facultatif : pour le raccourci clavier.",
+                    PermissionRow(title: "Contrôle du Finder", detail: "Facultatif\u{202F}: pour le raccourci clavier.",
                                   status: model.finderAutomation, action: model.requestFinderAutomation)
                 }
                 Section("Roues") {
@@ -29,7 +29,7 @@ struct SettingsView: View {
                     LabeledContent("Raccourci") {
                         ShortcutRecorder(combo: $model.hotKey).fixedSize()
                     }
-                    Text("Ouvre la roue sur les fichiers sélectionnés dans le Finder : flèches pour choisir, Entrée pour appliquer, Échap pour annuler.")
+                    Text("Ouvre la roue sur les fichiers sélectionnés dans le Finder\u{202F}: flèches pour choisir, Entrée pour appliquer, Échap pour annuler.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -50,7 +50,7 @@ struct SettingsView: View {
                     }
                     .pickerStyle(.segmented)
                     Toggle("Retirer les données de localisation", isOn: $model.stripsLocation)
-                    Toggle("Son à la fin d'une conversion", isOn: $model.playsSound)
+                    Toggle("Son à la fin d’une conversion", isOn: $model.playsSound)
                 }
                 Section("Général") {
                     Toggle("Ouvrir au démarrage", isOn: $model.launchAtLogin)

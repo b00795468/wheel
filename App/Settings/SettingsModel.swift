@@ -11,7 +11,7 @@ final class SettingsModel: ObservableObject {
         var title: String {
             switch self {
             case .converted: "Téléchargements › Convertis"
-            case .beside: "À côté de l'original"
+            case .beside: "À côté de l’original"
             case .custom: "Dossier personnalisé…"
             }
         }

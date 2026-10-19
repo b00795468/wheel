@@ -20,11 +20,11 @@ struct ImageFormat: Equatable, Sendable {
 
     static let jpeg = ImageFormat(type: .jpeg, fileExtension: "jpg", title: "JPG", symbol: "photo",
                                   supportsAlpha: false, lossyQuality: 0.9, sameFormatTypes: [.jpeg])
-    static let png = ImageFormat(type: .png, fileExtension: "png", title: "PNG", symbol: "photo.fill",
+    static let png = ImageFormat(type: .png, fileExtension: "png", title: "PNG", symbol: "photo",
                                  supportsAlpha: true, lossyQuality: nil, sameFormatTypes: [.png])
-    static let heic = ImageFormat(type: .heic, fileExtension: "heic", title: "HEIC", symbol: "photo.on.rectangle",
+    static let heic = ImageFormat(type: .heic, fileExtension: "heic", title: "HEIC", symbol: "photo",
                                   supportsAlpha: true, lossyQuality: 0.9, sameFormatTypes: [.heic, .heif])
-    static let tiff = ImageFormat(type: .tiff, fileExtension: "tiff", title: "TIFF", symbol: "doc.richtext",
+    static let tiff = ImageFormat(type: .tiff, fileExtension: "tiff", title: "TIFF", symbol: "photo",
                                   supportsAlpha: true, lossyQuality: nil, sameFormatTypes: [.tiff])
     static let avif = ImageFormat(type: FileTypes.avif, fileExtension: "avif", title: "AVIF", symbol: "photo",
                                   supportsAlpha: true, lossyQuality: 0.9, sameFormatTypes: [FileTypes.avif])

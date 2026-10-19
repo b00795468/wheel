@@ -15,7 +15,7 @@ struct GestureAnimationView: View {
             frame(at: time)
         }
         .frame(width: 260, height: 180)
-        .accessibilityLabel("Animation : glisser un fichier, taper une touche, déposer sur la roue")
+        .accessibilityLabel("Animation\u{202F}: glisser un fichier, taper une touche, déposer sur la roue")
     }
 
     private func frame(at time: TimeInterval) -> some View {
