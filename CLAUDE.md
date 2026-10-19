@@ -33,9 +33,8 @@
 | 7. Finitions | 🟡 Critique Impeccable 24/40 → 27/40 puis seconde passe (onboarding sûr sans Accessibilité, pastille « dans <dossier> · Afficher », formats en libellés seuls, titre qui nomme les roues). Plans : `docs/superpowers/plans/2026-10-19-phase-7-polish.md`, critiques : `.impeccable/critique/`. 124 tests OK. À valider : checklist manuelle (VoiceOver, Réduire les animations, onboarding sans Accessibilité) |
 | 8. Livraison | ⏳ Pas commencée |
 
-## Décisions en attente
+## Décisions prises
 
-- Phase 7 : le libellé « Afficher dans le Finder » touche presque le bord de l’anneau (2 lignes).
-
-- Nom définitif (proposés : Orbe, Virage, Halo, Pivot, Rondo).
-- Couleur d'accent (proposées : terracotta `#D9663F`, ambre `#E0A030`).
+- Nom : Pivot. Accent : terracotta `#D9663F` ; `#B8532F` (même teinte) sous le texte blanc du segment survolé (contraste 4,87:1).
+- Formats de la roue Convertir en libellés seuls ; noms de fichiers de sortie avec espaces ordinaires (pas d’insécables).
+- « Afficher dans le Finder » : espace insécable avant « Finder », le libellé reste dans l’anneau (mesuré à 7,8 pt du bord).
