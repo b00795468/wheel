@@ -267,7 +267,7 @@ private final class WheelCenterView: NSView {
 
 // MARK: - Title
 
-/// "Convertir  ⇧ ⌘ ⌃" in a small capsule above the ring; the current
+/// "Convertir  ⇧ ⌘ ⌃" (or the open sub-wheel's title) in a small capsule above the ring; the current
 /// wheel's key is emphasised, the others are hints for switching.
 @MainActor
 final class WheelTitleView: NSView {
@@ -293,9 +293,9 @@ final class WheelTitleView: NSView {
 
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
-    func setMode(_ mode: WheelMode) {
+    func setMode(_ mode: WheelMode, title: String? = nil) {
         let text = NSMutableAttributedString(
-            string: mode.title,
+            string: title ?? mode.title,
             attributes: [.font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: NSColor.labelColor]
         )
         for other in WheelMode.allCases {

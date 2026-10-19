@@ -18,7 +18,7 @@ final class GestureCoordinator {
 
     func start() {
         wheel.segmentsProvider = { [registry] mode, files in
-            registry.operations(for: files, kind: mode).map(\.segment)
+            registry.segments(for: files, kind: mode)
         }
         wheel.onDrop = { [weak self] id, files in self?.runOperation(id, on: files) }
         dragMonitor.onFileDragStarted = { files in
@@ -104,7 +104,10 @@ extension GestureCoordinator {
             wheel.debugHighlight(slot: defaults.integer(forKey: "debugSlot"))
         }
         if let path = defaults.string(forKey: "debugSnapshot") {
-            wheel.debugSnapshot(to: URL(fileURLWithPath: path))
+            // Leaves time for a hovered parent to open its sub-wheel.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [wheel] in
+                wheel.debugSnapshot(to: URL(fileURLWithPath: path))
+            }
         }
     }
 }

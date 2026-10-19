@@ -5,7 +5,7 @@ import AppKit
 /// so that showing it is just a move and fade (< 100 ms, §7).
 @MainActor
 final class WheelController {
-    /// Hovering "Plus…" this long turns the page (§5.2).
+    /// Lingering this long on "Plus…", "Retour" or a sub-wheel segment navigates (§5.2).
     private static let pagingDelay: TimeInterval = 0.5
     private static let titleGap: CGFloat = 2
 
@@ -17,7 +17,7 @@ final class WheelController {
     private var model: WheelModel?
     private var files: [URL] = []
     private var hoveredSlot: Int?
-    private var pagingTimer: Timer?
+    private var navigationTimer: Timer?
     /// Bumped on every show/dismiss so a stale fade-out never hides a newer wheel.
     private var generation = 0
 
@@ -108,13 +108,13 @@ final class WheelController {
 
     private func load(_ mode: WheelMode) {
         model = WheelModel(mode: mode, segments: segmentsProvider(mode, files))
-        titleView.setMode(mode)
         reloadItems()
     }
 
     private func reloadItems() {
         setHoveredSlot(nil)
         guard let model else { return }
+        titleView.setMode(model.mode, title: model.title)
         wheelView.setItems(model.items, emptyMessage: model.mode.emptyMessage)
     }
 
@@ -132,32 +132,50 @@ final class WheelController {
 
     // MARK: Hover
 
+    /// What lingering on a slot does.
+    private enum Navigation {
+        case nextPage, open(WheelSegment), back
+    }
+
+    private func navigation(for item: WheelItem) -> Navigation? {
+        switch item {
+        case .more: .nextPage
+        case .back: .back
+        case .segment(let segment): segment.children.isEmpty ? nil : .open(segment)
+        }
+    }
+
     fileprivate func setHoveredSlot(_ slot: Int?) {
         guard slot != hoveredSlot else { return }
         hoveredSlot = slot
         wheelView.highlightedSlot = slot
-        pagingTimer?.invalidate()
-        pagingTimer = nil
+        navigationTimer?.invalidate()
+        navigationTimer = nil
         guard let slot, let model else { return }
 
         NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
-        if model.items[slot] == .more {
-            pagingTimer = Timer.scheduledTimer(withTimeInterval: Self.pagingDelay, repeats: false) { _ in
-                MainActor.assumeIsolated { self.turnPage() }
+        if let navigation = navigation(for: model.items[slot]) {
+            navigationTimer = Timer.scheduledTimer(withTimeInterval: Self.pagingDelay, repeats: false) { _ in
+                MainActor.assumeIsolated { self.navigate(navigation) }
             }
         }
     }
 
-    private func turnPage() {
+    private func navigate(_ navigation: Navigation) {
         guard isVisible else { return }
-        model?.nextPage()
+        switch navigation {
+        case .nextPage: model?.nextPage()
+        case .open(let segment): model?.open(segment)
+        case .back: model?.goBack()
+        }
         reloadItems()
         NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
     }
 
     private func segment(at point: CGPoint) -> (slot: Int?, segment: WheelSegment?) {
         guard case .slot(let slot) = wheelView.geometry.hit(point), let model else { return (nil, nil) }
-        if case .segment(let segment) = model.items[slot] { return (slot, segment) }
+        // Only leaf segments take the drop; a parent opens its sub-wheel instead.
+        if case .segment(let segment) = model.items[slot], segment.children.isEmpty { return (slot, segment) }
         return (slot, nil)
     }
 }
@@ -172,7 +190,7 @@ extension WheelController: WheelDropTargetDelegate {
         isDragInside = true
         let hit = segment(at: point)
         setHoveredSlot(hit.slot)
-        // Only a real segment accepts the drop; the centre and "Plus…" refuse it.
+        // Only a leaf segment accepts the drop; the centre, "Plus…", "Retour" and parents refuse it.
         return hit.segment == nil ? [] : .copy
     }
 
