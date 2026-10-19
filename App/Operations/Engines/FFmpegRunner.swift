@@ -6,13 +6,18 @@ struct MediaProbe: Equatable, Sendable {
     /// Codec of the first real video stream (cover art excluded), e.g. "h264".
     var videoCodec: String?
     var audioCodec: String?
+    /// Coded size of that video stream.
+    var width: Int? = nil
+    var height: Int? = nil
 
-    /// Parses `ffprobe -show_entries format=duration:stream=codec_type,codec_name:stream_disposition=attached_pic -of json`.
+    /// Parses `ffprobe -show_entries format=duration:stream=codec_type,codec_name,width,height:stream_disposition=attached_pic -of json`.
     static func parse(_ json: Data) throws -> MediaProbe {
         struct Output: Decodable {
             struct Stream: Decodable {
                 let codecType: String?
                 let codecName: String?
+                let width: Int?
+                let height: Int?
                 let disposition: [String: Int]?
             }
             struct Format: Decodable {
@@ -25,11 +30,11 @@ struct MediaProbe: Equatable, Sendable {
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         let output = try decoder.decode(Output.self, from: json)
         let streams = output.streams ?? []
-        func firstCodec(_ type: String) -> String? {
-            streams.first { $0.codecType == type && $0.disposition?["attached_pic"] != 1 }?.codecName
-        }
+        let video = streams.first { $0.codecType == "video" && $0.disposition?["attached_pic"] != 1 }
+        let audio = streams.first { $0.codecType == "audio" }
         let duration = output.format?.duration.flatMap(Double.init).flatMap { $0 > 0 ? $0 : nil }
-        return MediaProbe(duration: duration, videoCodec: firstCodec("video"), audioCodec: firstCodec("audio"))
+        return MediaProbe(duration: duration, videoCodec: video?.codecName, audioCodec: audio?.codecName,
+                          width: video?.width, height: video?.height)
     }
 }
 
@@ -61,7 +66,7 @@ struct FFmpegRunner: Sendable {
     func probe(_ input: URL) async throws -> MediaProbe {
         let result = try await Self.execute(ffprobe, [
             "-v", "error",
-            "-show_entries", "format=duration:stream=codec_type,codec_name:stream_disposition=attached_pic",
+            "-show_entries", "format=duration:stream=codec_type,codec_name,width,height:stream_disposition=attached_pic",
             "-of", "json", input.path,
         ])
         guard result.status == 0 else { throw FFmpegError(status: result.status, log: result.log) }

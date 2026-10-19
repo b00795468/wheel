@@ -75,4 +75,11 @@ final class FFmpegRunnerTests: XCTestCase {
         } catch is CancellationError {}
         XCTAssertLessThan(Date().timeIntervalSince(start), 3)
     }
+
+    func testProbeReportsTheVideoSize() throws {
+        let json = #"{"streams":[{"codec_name":"hevc","codec_type":"video","width":3840,"height":2160,"disposition":{"attached_pic":0}}],"format":{"duration":"1.0"}}"#
+        let probe = try MediaProbe.parse(Data(json.utf8))
+        XCTAssertEqual(probe.width, 3840)
+        XCTAssertEqual(probe.height, 2160)
+    }
 }

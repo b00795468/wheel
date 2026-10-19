@@ -4,14 +4,19 @@ import Foundation
 struct OperationRegistry: Sendable {
     let operations: [any FileOperation]
 
-    static let standard = OperationRegistry(operations: [
-        ConvertToImageOperation(format: .jpeg, acceptsPDF: true),
-        ConvertToImageOperation(format: .png, acceptsPDF: true),
-        ConvertToImageOperation(format: .heic, acceptsPDF: false),
-        ImageToWebPOperation(),
-        ConvertToImageOperation(format: .tiff, acceptsPDF: false),
-        ImagesToPDFOperation(),
-    ] + MediaOutput.allCases.map { MediaConvertOperation(output: $0) as any FileOperation })
+    static let standard: OperationRegistry = {
+        var operations: [any FileOperation] = [
+            ConvertToImageOperation(format: .jpeg, acceptsPDF: true),
+            ConvertToImageOperation(format: .png, acceptsPDF: true),
+            ConvertToImageOperation(format: .heic, acceptsPDF: false),
+            ImageToWebPOperation(),
+            ConvertToImageOperation(format: .tiff, acceptsPDF: false),
+            ImagesToPDFOperation(),
+        ]
+        operations += MediaOutput.allCases.map { MediaConvertOperation(output: $0) as any FileOperation }
+        operations.append(CompressOperation())
+        return OperationRegistry(operations: operations)
+    }()
 
     /// Operations of `kind` that apply to every one of `files` (§5.2).
     /// Only the URLs are used: the files are not readable before the drop.

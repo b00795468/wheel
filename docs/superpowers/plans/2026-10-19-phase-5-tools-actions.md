@@ -14,6 +14,7 @@
 ## Contraintes globales
 
 - **Compresser** : images (JPG qualité 75 %, PNG → optimisation sans perte si possible), vidéo (H.264/HEVC VideoToolbox, ~1080p, débit raisonnable), PDF (`PDFDocument` réécrit avec images downsamplées). Le nom de sortie prend le suffixe ` (compressé)` (§5.4).
+- Écart mesuré pendant l'exécution : les options d'écriture PDFKit (`saveImagesAsJPEG`, `optimizeImagesForScreen`) n'ont aucun effet sur ce macOS ; le PDF passe par le filtre système « Reduce File Size » (celui d'Aperçu), qui conserve texte et vecteurs mais pas les liens ni les annotations.
 - **Redimensionner** (images, vidéo) : sous-roue avec préréglages **50 %**, **1920 px**, **1280 px**, **800 px** (plus grand côté, ratio conservé) (§5.4).
 - **Copier le chemin** (chemin POSIX, plusieurs fichiers séparés par des retours à la ligne) ; **Afficher dans le Finder** ; **AirDrop** (`NSSharingService(named: .sendViaAirDrop)`) (§5.4).
 - Dossiers : uniquement les actions (§5.2).
@@ -432,6 +433,7 @@ final class CompressOperationTests: XCTestCase {
         XCTAssertEqual(output.lastPathComponent, "scan (compressé).pdf")
         XCTAssertLessThan(try size(output), try size(input))
         XCTAssertEqual(PDFDocument(url: output)?.pageCount, 1)
+        XCTAssertEqual(PDFDocument(url: output)?.page(at: 0)?.bounds(for: .mediaBox).size, CGSize(width: 400, height: 300))
     }
 
     func testVideoBecomesHEVCAtMost1080p() async throws {
@@ -620,11 +622,11 @@ Dans `App/Operations/FileOperation.swift`, à la fin de `OperationError` :
 ```swift
 import Foundation
 import ImageIO
-import PDFKit
+import Quartz
 import UniformTypeIdentifiers
 
 /// "Compresser" (§5.4): images re-encoded at 75 % (PNG and TIFF without
-/// loss), PDFs rewritten with JPEG images at screen resolution, videos
+/// loss), PDFs through the system "Reduce File Size" filter, videos
 /// re-encoded in HEVC at most 1080p. The format is kept, and a result that
 /// is not smaller is refused instead of being handed over.
 struct CompressOperation: FileOperation {
@@ -693,10 +695,35 @@ struct CompressOperation: FileOperation {
                                       ffmpeg: context.ffmpeg)
     }
 
+    /// The system filter behind Preview's "Reduce File Size": images are
+    /// downsampled and JPEG-compressed, text and vectors are kept. (PDFKit's
+    /// saveImagesAsJPEG / optimizeImagesForScreen write options were measured
+    /// to have no effect.) Links and annotations are not carried over.
+    private static let reduceFileSizeFilter = URL(fileURLWithPath: "/System/Library/Filters/Reduce File Size.qfilter")
+
     private static func compressPDF(_ input: URL, to url: URL) throws {
-        let document = try PDFConverter.openDocument(input)
-        let options: [PDFDocumentWriteOption: Any] = [.saveImagesAsJPEGOption: true, .optimizeImagesForScreenOption: true]
-        guard document.write(to: url, withOptions: options) else { throw OperationError.writeFailed }
+        // Reports locked or unreadable PDFs with a human message.
+        _ = try PDFConverter.openDocument(input)
+        guard let document = CGPDFDocument(input as CFURL),
+              let filter = QuartzFilter(url: reduceFileSizeFilter),
+              let context = CGContext(url as CFURL, mediaBox: nil, nil),
+              filter.apply(to: context) else {
+            throw OperationError.writeFailed
+        }
+        defer { context.closePDF() }
+        for index in 1...document.numberOfPages {
+            try Task.checkCancellation()
+            guard let page = document.page(at: index) else { throw OperationError.unreadablePDF }
+            // Redraw upright: the page's /Rotate is applied by the drawing transform.
+            let crop = page.getBoxRect(.cropBox)
+            let quarterTurn = (page.rotationAngle / 90) % 2 != 0
+            var box = CGRect(x: 0, y: 0, width: quarterTurn ? crop.height : crop.width,
+                             height: quarterTurn ? crop.width : crop.height)
+            context.beginPage(mediaBox: &box)
+            context.concatenate(page.getDrawingTransform(.cropBox, rect: box, rotate: 0, preserveAspectRatio: true))
+            context.drawPDFPage(page)
+            context.endPage()
+        }
     }
 
     /// HEVC bitrate for the output's longer side: sensible for 1080p and below.

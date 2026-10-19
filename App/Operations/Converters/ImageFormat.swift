@@ -26,4 +26,19 @@ struct ImageFormat: Equatable, Sendable {
                                   supportsAlpha: true, lossyQuality: 0.9, sameFormatTypes: [.heic, .heif])
     static let tiff = ImageFormat(type: .tiff, fileExtension: "tiff", title: "TIFF", symbol: "doc.richtext",
                                   supportsAlpha: true, lossyQuality: nil, sameFormatTypes: [.tiff])
+    static let avif = ImageFormat(type: FileTypes.avif, fileExtension: "avif", title: "AVIF", symbol: "photo",
+                                  supportsAlpha: true, lossyQuality: 0.9, sameFormatTypes: [FileTypes.avif])
+    static let bmp = ImageFormat(type: .bmp, fileExtension: "bmp", title: "BMP", symbol: "photo",
+                                 supportsAlpha: false, lossyQuality: nil, sameFormatTypes: [.bmp])
+
+    /// The ImageIO format of a file of `type`, to write it back as it was.
+    static func matching(_ type: UTType) -> ImageFormat? {
+        [jpeg, png, heic, tiff, avif, bmp].first { $0.isSameFormat(as: type) }
+    }
+
+    /// Same format with another lossy quality; lossless formats are unchanged.
+    func withQuality(_ quality: Double) -> ImageFormat {
+        ImageFormat(type: type, fileExtension: fileExtension, title: title, symbol: symbol, supportsAlpha: supportsAlpha,
+                    lossyQuality: lossyQuality == nil ? nil : quality, sameFormatTypes: sameFormatTypes)
+    }
 }

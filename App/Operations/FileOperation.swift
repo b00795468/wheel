@@ -67,4 +67,10 @@ struct OperationError: LocalizedError, Equatable {
     static let noAudio = OperationError(message: "Cette vidéo ne contient pas de son.")
     static let noVideo = OperationError(message: "Ce fichier ne contient pas d'image vidéo.")
     static let engineMissing = OperationError(message: "Le moteur audio et vidéo est introuvable. Réinstallez l'application.")
+    static let alreadyCompressed = OperationError(message: "Ce fichier est déjà compressé au mieux.")
+    static let airDropUnavailable = OperationError(message: "AirDrop n'est pas disponible. Vérifiez qu'il est activé.")
+
+    static func alreadySmall(than limit: String) -> OperationError {
+        OperationError(message: "Ce fichier fait déjà moins de \(limit).")
+    }
 }

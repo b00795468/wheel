@@ -99,6 +99,50 @@ enum Fixtures {
         return url
     }
 
+    /// Random pixels: compresses badly losslessly, well lossily.
+    static func makeNoiseImage(width: Int, height: Int) -> CGImage {
+        var pixels = [UInt8](repeating: 255, count: width * height * 4)
+        for index in stride(from: 0, to: pixels.count, by: 4) {
+            pixels[index] = .random(in: 0...255)
+            pixels[index + 1] = .random(in: 0...255)
+            pixels[index + 2] = .random(in: 0...255)
+        }
+        return pixels.withUnsafeMutableBytes { buffer in
+            CGContext(data: buffer.baseAddress, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+                      space: sRGB, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!.makeImage()!
+        }
+    }
+
+    @discardableResult
+    static func writeNoiseImage(_ name: String, in directory: URL, type: UTType, width: Int = 400, height: Int = 300,
+                                quality: Double = 1) throws -> URL {
+        let url = directory.appending(path: name)
+        guard let destination = CGImageDestinationCreateWithURL(url as CFURL, type.identifier as CFString, 1, nil) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        CGImageDestinationAddImage(destination, makeNoiseImage(width: width, height: height),
+                                   [kCGImageDestinationLossyCompressionQuality: quality] as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else { throw CocoaError(.fileWriteUnknown) }
+        return url
+    }
+
+    /// One-page PDF embedding a large noise image (stored losslessly by Core Graphics).
+    @discardableResult
+    static func writeImagePDF(_ name: String, in directory: URL, rotation: Int = 0) throws -> URL {
+        let url = directory.appending(path: name)
+        var box = CGRect(x: 0, y: 0, width: 400, height: 300)
+        guard let context = CGContext(url as CFURL, mediaBox: &box, nil) else { throw CocoaError(.fileWriteUnknown) }
+        context.beginPage(mediaBox: &box)
+        context.draw(makeNoiseImage(width: 1600, height: 1200), in: box)
+        context.endPage()
+        context.closePDF()
+        if rotation != 0, let document = PDFDocument(url: url) {
+            document.page(at: 0)?.rotation = rotation
+            guard document.write(to: url) else { throw CocoaError(.fileWriteUnknown) }
+        }
+        return url
+    }
+
     static func info(_ url: URL) throws -> ImageInfo {
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let type = CGImageSourceGetType(source) as String?,
@@ -148,14 +192,16 @@ extension Fixtures {
     /// Test video from ffmpeg's lavfi sources: colour bars, plus a 440 Hz tone when `audio`.
     @discardableResult
     static func writeVideo(_ name: String, in directory: URL, seconds: Int = 2, codec: String = "h264_videotoolbox",
-                           audio: Bool = true, size: String = "1280x720") throws -> URL {
+                           audio: Bool = true, size: String = "1280x720", quality: String? = nil) throws -> URL {
         let url = directory.appending(path: name)
         var arguments = ["-hide_banner", "-loglevel", "error",
                          "-f", "lavfi", "-i", "testsrc2=duration=\(seconds):size=\(size):rate=30"]
         if audio {
             arguments += ["-f", "lavfi", "-i", "sine=frequency=440:duration=\(seconds)", "-c:a", "aac"]
         }
-        arguments += ["-c:v", codec, "-pix_fmt", "yuv420p", "-shortest", url.path]
+        arguments += ["-c:v", codec, "-pix_fmt", "yuv420p"]
+        if let quality { arguments += ["-q:v", quality] }
+        arguments += ["-shortest", url.path]
         try runTool(try ffmpeg().ffmpeg, arguments)
         return url
     }

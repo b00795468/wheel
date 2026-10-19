@@ -58,9 +58,12 @@ final class OperationRegistryTests: XCTestCase {
         XCTAssertEqual(ids(["anim.gif"]), [])
     }
 
-    func testToolsAndActionsArriveInPhase5() {
-        XCTAssertEqual(ids(["a.png"], .tools), [])
-        XCTAssertEqual(ids(["a.mp4"], .actions), [])
+    func testCompressIsOfferedForCompressibleFiles() {
+        XCTAssertEqual(ids(["a.pdf"], .tools), ["tool.compress"])
+        XCTAssertTrue(ids(["a.png"], .tools).contains("tool.compress"))
+        XCTAssertFalse(ids(["a.bmp"], .tools).contains("tool.compress"))
+        XCTAssertEqual(ids(["a.mp3"], .tools), [])
+        XCTAssertEqual(ids(["Vacances/"], .tools), [])
     }
 
     func testIDsAreUniqueAndLookupWorks() {
