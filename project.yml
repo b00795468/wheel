@@ -45,6 +45,8 @@ targets:
       - App/DragMonitor/ModifierTapDetector.swift
       - App/Wheel/WheelModel.swift
       - App/Wheel/WheelGeometry.swift
+      - App/Wheel/WheelView.swift
+      - App/Theme.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: local.pivot.tests

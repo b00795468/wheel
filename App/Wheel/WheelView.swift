@@ -91,7 +91,7 @@ private final class WheelSlotView: NSView {
 
     private let index: Int
     private let geometry: WheelGeometry
-    private let icon = NSImageView()
+    private let icon = PassiveImageView()
     private let label = NSTextField(labelWithString: "")
     private var isHighlighted = false
 
@@ -208,7 +208,7 @@ private final class WheelSlotView: NSView {
 /// Neutral zone: icon and name of the dragged file, "×N" for several.
 @MainActor
 private final class WheelCenterView: NSView {
-    private let icon = NSImageView()
+    private let icon = PassiveImageView()
     private let name = NSTextField(labelWithString: "")
     private let count = NSTextField(labelWithString: "")
 
@@ -311,6 +311,20 @@ final class WheelTitleView: NSView {
         label.frame = NSRect(x: material.frame.minX, y: (Self.height - textSize.height) / 2,
                              width: width, height: textSize.height)
     }
+}
+
+/// Image view that is never a drop target. NSImageView registers for file
+/// and image drags by default, which made every icon a dead spot on the wheel.
+private final class PassiveImageView: NSImageView {
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        unregisterDraggedTypes()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
 }
 
 extension CATransform3D {
