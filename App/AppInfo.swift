@@ -13,4 +13,5 @@ enum AppInfo {
 
     static let subsystem = Bundle.main.bundleIdentifier ?? "local.pivot.app"
     static let log = Logger(subsystem: subsystem, category: "app")
+    static let gestureLog = Logger(subsystem: subsystem, category: "gesture")
 }

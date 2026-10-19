@@ -32,4 +32,20 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: local.pivot.app
         INFOPLIST_FILE: App/Info.plist
         GENERATE_INFOPLIST_FILE: NO
-    scheme: {}
+    scheme:
+      testTargets: [PivotTests]
+
+  # Hostless unit tests: the pure-logic sources are compiled straight into
+  # the bundle, so running tests never launches the app (and its monitors).
+  PivotTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests
+      - App/DragMonitor/ModifierTapDetector.swift
+      - App/Wheel/WheelModel.swift
+      - App/Wheel/WheelGeometry.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: local.pivot.tests
+        GENERATE_INFOPLIST_FILE: YES
