@@ -2,6 +2,7 @@
 
 - La spécification complète est dans `SPEC.md` : la lire au début de chaque session et la suivre (règles de travail §1, phases §9).
 - Build : `scripts/build.sh [Debug|Release]` (XcodeGen + xcodebuild). Lancer : `open build/Build/Products/Debug/Pivot.app`.
+- Livraison : `scripts/package.sh` (Release, zip, guide PDF via pandoc + Chrome, contrôles).
 - Tests unitaires : `scripts/test.sh` (cible PivotTests sans app hôte).
 - ffmpeg : `scripts/fetch-ffmpeg.sh` (appelé automatiquement par build.sh et test.sh) récupère le build martin-riedl.de 9.0.2 arm64 validé par Raphaël, SHA-256 épinglés, dans `Vendor/ffmpeg/` (non versionné) ; la phase de build « Embed ffmpeg » le copie dans `Contents/Resources/bin/` et le re-signe.
 - Debug sans drag : `open -n Pivot.app --args -debugWheel convert|tools|actions [-debugSlot N] [-debugSnapshot out.png] [-debugFiles '("/chemin")']` (rendu hors écran : sans matériau HUD ni échelle de survol) ; `-debugRun convert.png -debugFiles '("/chemin")'` exécute une opération comme après un drop ; `-debugKeyboard YES -debugFiles '("/chemin")'` ouvre la roue clavier ; `-debugSettingsSnapshot out.png` et `-debugOnboardingSnapshot out.png -debugOnboardingPage N` rendent les fenêtres hors écran (fond transparent : composer sur un fond sombre pour lire le texte blanc).
@@ -31,7 +32,7 @@
 | 5. Outils + Actions | ✅ Go donné par Raphaël. Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-5-tools-actions.md`), 111 tests OK, essais réels (compression vidéo HEVC 1080p, redimensionnement, copie de chemin). Décisions : format conservé, jamais d’agrandissement, compression refusée si pas plus petite, BMP hors « Compresser », PDF via le filtre système « Reduce File Size » (les options PDFKit n’ont aucun effet ; liens/annotations perdus). |
 | 6. Onboarding, Réglages, clavier | ✅ Validée par Raphaël (checklist OK). Code fait (plan : `docs/superpowers/plans/2026-10-19-phase-6-settings-onboarding-keyboard.md`), 121 tests OK ; mode clavier testé avec de vraies touches (→ puis Entrée, Échap) ; onboarding vérifié au premier lancement ; CPU 0 % au repos. Écart : « Surveillance de l’entrée » non demandée (jamais requise, mesuré). |
 | 7. Finitions | ✅ Go donné par Raphaël. Critique Impeccable 24/40 → 27/40 puis seconde passe (onboarding sûr sans Accessibilité, pastille « dans <dossier> · Afficher », formats en libellés seuls, titre qui nomme les roues). Plans : `docs/superpowers/plans/2026-10-19-phase-7-polish.md`, critiques : `.impeccable/critique/`. 124 tests OK. Accent final #F0F1F1, roue et pastilles toujours sombres. |
-| 8. Livraison | ⏳ Pas commencée |
+| 8. Livraison | 🟡 `scripts/package.sh` → `dist/` : Pivot.app (Release arm64, signée « Pivot Dev », ffmpeg signé, dépendances système), Pivot.zip (ditto, 54 Mo), INSTALLATION.md + PDF (2 pages ; source `docs/INSTALLATION.md`). Simulation quarantaine : Gatekeeper refuse puis propose « Ouvrir quand même », comme une signature ad hoc. À valider : installation réelle par le frère |
 
 ## Décisions prises
 
