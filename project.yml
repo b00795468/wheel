@@ -1,0 +1,35 @@
+# Source of truth for the Xcode project. Regenerate with: xcodegen generate
+name: Pivot
+options:
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    ARCHS: arm64
+    # Ad hoc signing ("Sign to Run Locally"), no team, no notarization.
+    CODE_SIGN_IDENTITY: "-"
+    CODE_SIGN_STYLE: Manual
+    DEVELOPMENT_TEAM: ""
+    # No sandbox, no hardened runtime: the app reads arbitrary files,
+    # runs an embedded ffmpeg and monitors global events.
+    ENABLE_APP_SANDBOX: NO
+    ENABLE_HARDENED_RUNTIME: NO
+    # Needed later by the Run Script phase that signs the embedded ffmpeg.
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+targets:
+  Pivot:
+    type: application
+    platform: macOS
+    sources: [App]
+    settings:
+      base:
+        PRODUCT_NAME: Pivot
+        PRODUCT_BUNDLE_IDENTIFIER: local.pivot.app
+        INFOPLIST_FILE: App/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+    scheme: {}
