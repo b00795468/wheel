@@ -66,13 +66,15 @@ final class GestureCoordinator {
 #if DEBUG
 extension GestureCoordinator {
     /// Shows the wheel without a drag, for checking its rendering:
-    /// `open Pivot.app --args -debugWheel convert|tools|actions [-debugSlot N] [-debugSnapshot out.png]`.
+    /// `open Pivot.app --args -debugWheel convert|tools|actions [-debugSlot N] [-debugSnapshot out.png]
+    /// [-debugFiles '("/path/a", "/path/b")']`.
     func showDebugWheelIfRequested() {
         let defaults = UserDefaults.standard
         guard let name = defaults.string(forKey: "debugWheel"),
               let mode = WheelMode.allCases.first(where: { "\($0)" == name }),
               let screen = NSScreen.main else { return }
-        let files = [URL(fileURLWithPath: "/System/Library/Desktop Pictures"), URL(fileURLWithPath: "/etc/hosts")]
+        let paths = defaults.stringArray(forKey: "debugFiles") ?? ["/System/Library/Desktop Pictures/", "/etc/hosts"]
+        let files = paths.map { URL(fileURLWithPath: $0) }
         wheel.show(mode, files: files, at: CGPoint(x: screen.frame.midX, y: screen.frame.midY))
         if defaults.object(forKey: "debugSlot") != nil {
             wheel.debugHighlight(slot: defaults.integer(forKey: "debugSlot"))
