@@ -8,9 +8,10 @@ struct OperationRegistry: Sendable {
         ConvertToImageOperation(format: .jpeg, acceptsPDF: true),
         ConvertToImageOperation(format: .png, acceptsPDF: true),
         ConvertToImageOperation(format: .heic, acceptsPDF: false),
+        ImageToWebPOperation(),
         ConvertToImageOperation(format: .tiff, acceptsPDF: false),
         ImagesToPDFOperation(),
-    ])
+    ] + MediaOutput.allCases.map { MediaConvertOperation(output: $0) as any FileOperation })
 
     /// Operations of `kind` that apply to every one of `files` (§5.2).
     /// Only the URLs are used: the files are not readable before the drop.

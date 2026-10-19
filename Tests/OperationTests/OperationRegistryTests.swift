@@ -9,14 +9,16 @@ final class OperationRegistryTests: XCTestCase {
     }
 
     func testAnImageOffersEveryOtherFormat() {
-        XCTAssertEqual(ids(["a.png"]), ["convert.jpg", "convert.heic", "convert.tiff", "convert.pdf"])
-        XCTAssertEqual(ids(["a.JPG"]), ["convert.png", "convert.heic", "convert.tiff", "convert.pdf"])
+        XCTAssertEqual(ids(["a.png"]), ["convert.jpg", "convert.heic", "convert.webp", "convert.tiff", "convert.pdf"])
+        XCTAssertEqual(ids(["a.JPG"]), ["convert.png", "convert.heic", "convert.webp", "convert.tiff", "convert.pdf"])
+        XCTAssertEqual(ids(["a.webp"]), ["convert.jpg", "convert.png", "convert.heic", "convert.tiff", "convert.pdf"])
         XCTAssertFalse(ids(["a.heif"]).contains("convert.heic"))
     }
 
-    func testWebPAVIFAndBMPAreAcceptedInputs() {
-        for name in ["a.webp", "a.avif", "a.bmp"] {
-            XCTAssertEqual(ids([name]), ["convert.jpg", "convert.png", "convert.heic", "convert.tiff", "convert.pdf"], name)
+    func testAVIFAndBMPAreAcceptedInputs() {
+        for name in ["a.avif", "a.bmp"] {
+            XCTAssertEqual(ids([name]), ["convert.jpg", "convert.png", "convert.heic", "convert.webp", "convert.tiff",
+                                         "convert.pdf"], name)
         }
     }
 
@@ -24,32 +26,61 @@ final class OperationRegistryTests: XCTestCase {
         XCTAssertEqual(ids(["a.pdf"]), ["convert.jpg", "convert.png"])
     }
 
+    func testVideosOfferTheOtherVideoFormatsAndTheirSoundtrack() {
+        XCTAssertEqual(ids(["a.mp4"]), ["convert.mov", "convert.gif", "convert.mp3", "convert.m4a"])
+        XCTAssertEqual(ids(["a.mov"]), ["convert.mp4", "convert.gif", "convert.mp3", "convert.m4a"])
+        for name in ["a.mkv", "a.webm", "a.avi"] {
+            XCTAssertEqual(ids([name]), ["convert.mp4", "convert.mov", "convert.gif", "convert.mp3", "convert.m4a"], name)
+        }
+    }
+
+    func testAudioOffersTheOtherAudioFormats() {
+        XCTAssertEqual(ids(["a.mp3"]), ["convert.m4a", "convert.wav", "convert.flac"])
+        XCTAssertEqual(ids(["a.m4a"]), ["convert.mp3", "convert.wav", "convert.flac"])
+        XCTAssertEqual(ids(["a.wav"]), ["convert.mp3", "convert.m4a", "convert.flac"])
+        XCTAssertEqual(ids(["a.flac"]), ["convert.mp3", "convert.m4a", "convert.wav"])
+        for name in ["a.aiff", "a.ogg"] {
+            XCTAssertEqual(ids([name]), ["convert.mp3", "convert.m4a", "convert.wav", "convert.flac"], name)
+        }
+    }
+
     func testSeveralFilesGetTheIntersection() {
-        XCTAssertEqual(ids(["a.jpg", "b.png"]), ["convert.heic", "convert.tiff", "convert.pdf"])
+        XCTAssertEqual(ids(["a.jpg", "b.png"]), ["convert.heic", "convert.webp", "convert.tiff", "convert.pdf"])
         XCTAssertEqual(ids(["a.pdf", "b.png"]), ["convert.jpg"])
+        XCTAssertEqual(ids(["a.mp4", "b.wav"]), ["convert.mp3", "convert.m4a"])
+        XCTAssertEqual(ids(["a.png", "b.mp4"]), [])
     }
 
     func testFoldersAndUnknownTypesGetNoConversion() {
         XCTAssertEqual(ids(["Vacances/"]), [])
         XCTAssertEqual(ids(["a.png", "Vacances/"]), [])
         XCTAssertEqual(ids(["notes.txt"]), [])
+        XCTAssertEqual(ids(["anim.gif"]), [])
     }
 
     func testToolsAndActionsArriveInPhase5() {
         XCTAssertEqual(ids(["a.png"], .tools), [])
-        XCTAssertEqual(ids(["a.png"], .actions), [])
+        XCTAssertEqual(ids(["a.mp4"], .actions), [])
     }
 
     func testIDsAreUniqueAndLookupWorks() {
         let all = registry.operations.map(\.id)
         XCTAssertEqual(Set(all).count, all.count)
         XCTAssertEqual(registry.operation(withID: "convert.png")?.title, "PNG")
+        XCTAssertEqual(registry.operation(withID: "convert.mp4")?.title, "MP4")
         XCTAssertNil(registry.operation(withID: "nope"))
     }
 
-    func testEveryWheelFitsOnOnePageForNow() {
-        for mode in WheelMode.allCases {
-            XCTAssertLessThanOrEqual(registry.operations.filter { $0.kind == mode }.count, WheelModel.maxItemsPerPage)
+    func testEachFileTypeFitsOnOnePage() {
+        for name in ["a.png", "a.avif", "a.pdf", "a.mkv", "a.ogg"] {
+            XCTAssertLessThanOrEqual(ids([name]).count, WheelModel.maxItemsPerPage, name)
         }
+    }
+
+    func testOnlyAudioAndVideoUseTheMediaEngineSlots() {
+        XCTAssertEqual(registry.operation(withID: "convert.mp4")?.usesMediaEngine, true)
+        XCTAssertEqual(registry.operation(withID: "convert.flac")?.usesMediaEngine, true)
+        XCTAssertEqual(registry.operation(withID: "convert.webp")?.usesMediaEngine, false)
+        XCTAssertEqual(registry.operation(withID: "convert.png")?.usesMediaEngine, false)
     }
 }

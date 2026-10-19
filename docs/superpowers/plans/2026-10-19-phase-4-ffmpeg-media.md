@@ -862,7 +862,9 @@ final class MediaConvertOperationTests: XCTestCase {
         let dir = try Fixtures.directory(for: self)
         let input = try Fixtures.writeVideo("clip.mp4", in: dir)
 
-        XCTAssertEqual(try Fixtures.codecs(of: try await convert(input, to: .mov, in: dir)), ["h264", "aac"])
+        let output = try await convert(input, to: .mov, in: dir)
+
+        XCTAssertEqual(try Fixtures.codecs(of: output), ["h264", "aac"])
     }
 
     func testVideoToGIFIsAtMost720Wide() async throws {
@@ -880,11 +882,15 @@ final class MediaConvertOperationTests: XCTestCase {
         let video = try Fixtures.writeVideo("clip.mp4", in: dir)
         let wav = try Fixtures.writeAudio("tone.wav", in: dir)
 
-        XCTAssertEqual(try Fixtures.codecs(of: try await convert(video, to: .mp3, in: dir)), ["mp3"])
-        XCTAssertEqual(try Fixtures.codecs(of: try await convert(video, to: .m4a, in: dir)), ["aac"])
-        XCTAssertEqual(try Fixtures.codecs(of: try await convert(wav, to: .flac, in: dir)), ["flac"])
-        let flac = dir.appending(path: "out/tone.flac")
-        XCTAssertEqual(try Fixtures.codecs(of: try await convert(flac, to: .wav, in: dir)), ["pcm_s16le"])
+        let mp3 = try await convert(video, to: .mp3, in: dir)
+        let m4a = try await convert(video, to: .m4a, in: dir)
+        let flac = try await convert(wav, to: .flac, in: dir)
+        let backToWAV = try await convert(flac, to: .wav, in: dir)
+
+        XCTAssertEqual(try Fixtures.codecs(of: mp3), ["mp3"])
+        XCTAssertEqual(try Fixtures.codecs(of: m4a), ["aac"])
+        XCTAssertEqual(try Fixtures.codecs(of: flac), ["flac"])
+        XCTAssertEqual(try Fixtures.codecs(of: backToWAV), ["pcm_s16le"])
     }
 
     func testSilentVideoToMP3FailsWithAHumanMessage() async throws {
@@ -1060,11 +1066,19 @@ enum MediaOutput: String, CaseIterable, Sendable {
         }
     }
 
-    /// Video outputs need a picture; audio outputs also take a video's soundtrack.
-    var isVideo: Bool {
+    /// Inputs accepted, as in §5.4: videos give MP4, MOV, GIF, MP3, M4A;
+    /// audio files give MP3, M4A, WAV, FLAC.
+    var acceptsVideo: Bool {
         switch self {
-        case .mp4, .mov, .gif: true
-        case .mp3, .m4a, .wav, .flac: false
+        case .mp4, .mov, .gif, .mp3, .m4a: true
+        case .wav, .flac: false
+        }
+    }
+
+    var acceptsAudio: Bool {
+        switch self {
+        case .mp3, .m4a, .wav, .flac: true
+        case .mp4, .mov, .gif: false
         }
     }
 
@@ -1139,8 +1153,8 @@ struct MediaConvertOperation: FileOperation {
 
     func accepts(_ types: [UTType]) -> Bool {
         !types.isEmpty && types.allSatisfy { type in
-            let video = FileTypes.isVideo(type)
-            guard output.isVideo ? video : (video || FileTypes.isAudio(type)) else { return false }
+            let accepted = FileTypes.isVideo(type) ? output.acceptsVideo : FileTypes.isAudio(type) && output.acceptsAudio
+            guard accepted else { return false }
             return !output.isSameFormat(as: type)
         }
     }
