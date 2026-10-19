@@ -6,7 +6,7 @@ struct ImagesToPDFOperation: FileOperation {
     let id = "convert.pdf"
     let kind = WheelMode.convert
     let title = "PDF"
-    let symbol = "doc.text"
+    let symbol = ""
 
     func accepts(_ types: [UTType]) -> Bool {
         !types.isEmpty && types.allSatisfy(FileTypes.isImage)

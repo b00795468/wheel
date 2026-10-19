@@ -47,4 +47,12 @@ final class ActionTests: XCTestCase {
         XCTAssertEqual(ResizeOperation(preset: .long1920).progressTitle, "Redimensionnement à \(ResizePreset.long1920.title)")
         XCTAssertEqual(CopyPathAction().progressTitle, "Copier le chemin")
     }
+
+    func testLabelOnlyFormatsFallBackToTheirWheelSymbolInPills() {
+        let png = ConvertToImageOperation(format: .png, acceptsPDF: true)
+        XCTAssertEqual(png.symbol, "")
+        XCTAssertEqual(png.displaySymbol, WheelMode.convert.symbol)
+        XCTAssertEqual(CopyPathAction().displaySymbol, "doc.on.clipboard")
+        XCTAssertEqual(MediaConvertOperation(output: .mp4).symbol, "")
+    }
 }

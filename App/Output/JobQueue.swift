@@ -32,7 +32,7 @@ final class JobQueue {
         let context = OperationContext(output: OutputLocator(destination: SettingsStore.outputDestination),
                                        stripsLocation: SettingsStore.stripsLocation, ffmpeg: ffmpeg,
                                        quality: SettingsStore.outputQuality)
-        let toast = hud.begin(title: operation.progressTitle, symbol: operation.symbol) { [weak self] in
+        let toast = hud.begin(title: operation.progressTitle, symbol: operation.displaySymbol) { [weak self] in
             self?.running[id]?.cancel()
         }
         let slots = operation.usesMediaEngine ? mediaSlots : nil
@@ -67,8 +67,8 @@ final class JobQueue {
         running.values.forEach { $0.cancel() }
     }
 
-    func inform(_ message: String, symbol: String) {
-        hud.inform(message, symbol: symbol)
+    func inform(_ message: String, symbol: String, action: (() -> Void)? = nil) {
+        hud.inform(message, symbol: symbol, action: action)
     }
 
     private func finish(_ id: UUID, operation: any FileOperation, inputs: [URL], toast: HUDToast,
@@ -79,7 +79,7 @@ final class JobQueue {
             let paths = outputs.map(\.path).joined(separator: ", ")
             AppInfo.jobLog.info("Job \(operation.id, privacy: .public) done: \(paths, privacy: .public)")
             if let message = operation.completionMessage(inputs: inputs, outputs: outputs) {
-                hud.succeed(toast, message: message, outputs: outputs, symbol: operation.symbol)
+                hud.succeed(toast, message: message, outputs: outputs, symbol: operation.displaySymbol)
             } else {
                 hud.cancel(toast)
             }

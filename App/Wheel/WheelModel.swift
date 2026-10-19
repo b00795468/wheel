@@ -12,6 +12,15 @@ enum WheelMode: CaseIterable {
         }
     }
 
+    /// Stands for the wheel where its segments have no symbol of their own (pills).
+    var symbol: String {
+        switch self {
+        case .convert: "arrow.triangle.2.circlepath"
+        case .tools: "wrench.and.screwdriver"
+        case .actions: "ellipsis.circle"
+        }
+    }
+
     /// Shown on the ring when no segment applies (§5.2).
     var emptyMessage: String {
         switch self {

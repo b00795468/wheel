@@ -18,17 +18,17 @@ struct ImageFormat: Equatable, Sendable {
         sameFormatTypes.contains { input.conforms(to: $0) }
     }
 
-    static let jpeg = ImageFormat(type: .jpeg, fileExtension: "jpg", title: "JPG", symbol: "photo",
+    static let jpeg = ImageFormat(type: .jpeg, fileExtension: "jpg", title: "JPG", symbol: "",
                                   supportsAlpha: false, lossyQuality: 0.9, sameFormatTypes: [.jpeg])
-    static let png = ImageFormat(type: .png, fileExtension: "png", title: "PNG", symbol: "photo",
+    static let png = ImageFormat(type: .png, fileExtension: "png", title: "PNG", symbol: "",
                                  supportsAlpha: true, lossyQuality: nil, sameFormatTypes: [.png])
-    static let heic = ImageFormat(type: .heic, fileExtension: "heic", title: "HEIC", symbol: "photo",
+    static let heic = ImageFormat(type: .heic, fileExtension: "heic", title: "HEIC", symbol: "",
                                   supportsAlpha: true, lossyQuality: 0.9, sameFormatTypes: [.heic, .heif])
-    static let tiff = ImageFormat(type: .tiff, fileExtension: "tiff", title: "TIFF", symbol: "photo",
+    static let tiff = ImageFormat(type: .tiff, fileExtension: "tiff", title: "TIFF", symbol: "",
                                   supportsAlpha: true, lossyQuality: nil, sameFormatTypes: [.tiff])
-    static let avif = ImageFormat(type: FileTypes.avif, fileExtension: "avif", title: "AVIF", symbol: "photo",
+    static let avif = ImageFormat(type: FileTypes.avif, fileExtension: "avif", title: "AVIF", symbol: "",
                                   supportsAlpha: true, lossyQuality: 0.9, sameFormatTypes: [FileTypes.avif])
-    static let bmp = ImageFormat(type: .bmp, fileExtension: "bmp", title: "BMP", symbol: "photo",
+    static let bmp = ImageFormat(type: .bmp, fileExtension: "bmp", title: "BMP", symbol: "",
                                  supportsAlpha: false, lossyQuality: nil, sameFormatTypes: [.bmp])
 
     /// The ImageIO format of a file of `type`, to write it back as it was.

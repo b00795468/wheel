@@ -7,7 +7,7 @@ struct ImageToWebPOperation: FileOperation {
     let id = "convert.webp"
     let kind = WheelMode.convert
     let title = "WebP"
-    let symbol = "photo"
+    let symbol = ""
 
     func accepts(_ types: [UTType]) -> Bool {
         !types.isEmpty && types.allSatisfy { FileTypes.isImage($0) && !$0.conforms(to: .webP) }

@@ -119,8 +119,8 @@ final class GestureCoordinator {
     }
 
     /// A notice in a pill, e.g. "Pivot est prêt" after the onboarding.
-    func inform(_ message: String, symbol: String) {
-        jobs.inform(message, symbol: symbol)
+    func inform(_ message: String, symbol: String, action: (() -> Void)? = nil) {
+        jobs.inform(message, symbol: symbol, action: action)
     }
 
     /// Called when the app quits, so no ffmpeg keeps running orphaned.

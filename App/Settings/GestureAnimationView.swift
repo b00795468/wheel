@@ -11,7 +11,14 @@ struct GestureAnimationView: View {
     /// Centre of the lit segment, from the wheel centre (SwiftUI y grows down).
     private static let dropPoint = CGSize(width: 45, height: -26)
 
+    /// The key that opens the Convert wheel, as remapped in Settings.
+    let key: String
+
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    init(key: String = "⇧") {
+        self.key = key
+    }
 
     var body: some View {
         TimelineView(.animation(paused: reduceMotion)) { timeline in
@@ -47,7 +54,7 @@ struct GestureAnimationView: View {
                 .offset(x: -110 * (1 - slide) + Self.dropPoint.width * drop, y: Self.dropPoint.height * drop)
                 .opacity(1 - progress(3.3, 3.5))
 
-            Text("⇧")
+            Text(key)
                 .font(.system(size: 18, weight: .semibold))
                 .frame(width: 34, height: 30)
                 .background(RoundedRectangle(cornerRadius: 6).fill(keyDown ? Theme.accentColor.opacity(0.35) : Color.secondary.opacity(0.15)))
@@ -61,7 +68,7 @@ struct GestureAnimationView: View {
             .font(.system(size: 11, weight: .medium))
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
-            .background(Capsule().fill(Color.secondary.opacity(0.18)))
+            .background(RoundedRectangle(cornerRadius: 7).fill(Color.secondary.opacity(0.18)))
             .offset(x: -10, y: 72 - 6 * (1 - pill))
             .opacity(pill)
         }

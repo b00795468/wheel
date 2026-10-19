@@ -36,7 +36,10 @@ struct OnboardingView: View {
                 if page > 0 {
                     Button("Retour") { page -= 1 }
                 }
-                if page < Self.pageCount - 1 {
+                if page == 1 && !model.accessibilityGranted {
+                    // Return goes to "Autoriser…" while the gesture cannot work.
+                    Button("Plus tard") { page += 1 }
+                } else if page < Self.pageCount - 1 {
                     Button("Continuer") { page += 1 }.keyboardShortcut(.defaultAction)
                 } else {
                     Button("Terminer") { onFinish(launchAtLogin) }.keyboardShortcut(.defaultAction)
@@ -51,7 +54,7 @@ struct OnboardingView: View {
 
     private var gesturePage: some View {
         VStack(spacing: 16) {
-            GestureAnimationView()
+            GestureAnimationView(key: model.triggers.key(for: .convert).glyph)
             Text("Glisser, appuyer, déposer").font(.title2.weight(.semibold))
             Text("Pendant que vous glissez un fichier, appuyez brièvement sur une touche\u{202F}: la roue s’ouvre autour du curseur. Lâchez le fichier sur une action.")
                 .multilineTextAlignment(.center)
@@ -74,7 +77,7 @@ struct OnboardingView: View {
                 .foregroundStyle(.secondary)
             PermissionRow(title: "Accessibilité", detail: "Indispensable\u{202F}: repère la touche appuyée pendant que vous glissez un fichier.",
                           status: model.accessibilityGranted ? .granted : .denied,
-                          action: PermissionsManager.grantAccessibility)
+                          action: PermissionsManager.grantAccessibility, prominent: !model.accessibilityGranted)
             PermissionRow(title: "Contrôle du Finder", detail: "Facultatif\u{202F}: pour ouvrir la roue au clavier (\(model.hotKey.display)).",
                           status: model.finderAutomation, action: model.requestFinderAutomation)
             if !model.accessibilityGranted {
@@ -82,9 +85,9 @@ struct OnboardingView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Spacer()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // Centred in the window, so short screens do not leave its lower half empty.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 
     private var outputPage: some View {
@@ -102,8 +105,8 @@ struct OnboardingView: View {
             Text("Pour retrouver les réglages plus tard, ouvrez \(AppInfo.name) à nouveau (Spotlight ou dossier Applications).")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Spacer()
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        // Centred in the window, so short screens do not leave its lower half empty.
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }

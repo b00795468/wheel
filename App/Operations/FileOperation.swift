@@ -66,6 +66,9 @@ extension FileOperation {
     var usesMediaEngine: Bool { false }
     var group: OperationGroup? { nil }
 
+    /// Symbol for pills: label-only segments fall back to their wheel's symbol.
+    var displaySymbol: String { symbol.isEmpty ? kind.symbol : symbol }
+
     var progressTitle: String {
         switch kind {
         case .convert: "Conversion en \(title)"

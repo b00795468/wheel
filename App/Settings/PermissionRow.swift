@@ -6,11 +6,13 @@ struct PermissionRow: View {
     let detail: String
     let status: PermissionsManager.Status
     let action: @MainActor () -> Void
+    /// The required permission while missing: accent button, default action.
+    var prominent = false
 
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: status == .granted ? "checkmark.circle.fill" : "circle.dashed")
-                .foregroundStyle(status == .granted ? Color.green : Color.secondary)
+                .foregroundStyle(Color.secondary)
                 .font(.title3)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -20,7 +22,14 @@ struct PermissionRow: View {
             if status == .granted {
                 Text("Autorisé").foregroundStyle(.secondary)
             } else {
-                Button("Autoriser…", action: action)
+                if prominent {
+                    Button("Autoriser…", action: action)
+                        .buttonStyle(.borderedProminent)
+                        .tint(Theme.accentColor)
+                        .keyboardShortcut(.defaultAction)
+                } else {
+                    Button("Autoriser…", action: action)
+                }
             }
         }
     }

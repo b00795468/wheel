@@ -11,15 +11,8 @@ enum MediaOutput: String, CaseIterable, Sendable {
     var fileExtension: String { rawValue }
     var title: String { rawValue.uppercased() }
 
-    var symbol: String {
-        switch self {
-        case .mp4: "film"
-        case .mov: "film"
-        case .gif: "photo.stack"
-        case .mp3, .m4a: "music.note"
-        case .wav, .flac: "waveform"
-        }
-    }
+    /// Label only: on the Convert wheel the format name says it all.
+    var symbol: String { "" }
 
     /// Inputs accepted, as in §5.4: videos give MP4, MOV, GIF, MP3, M4A;
     /// audio files give MP3, M4A, WAV, FLAC.

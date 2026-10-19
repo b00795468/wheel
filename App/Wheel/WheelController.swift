@@ -23,6 +23,9 @@ final class WheelController {
 
     /// Opened by the shortcut rather than a drag (§5.3).
     private var keyboardMode = false
+    /// Hover announcements wait for the pointer to settle on a slot.
+    private static let announcementDelay: Duration = .milliseconds(150)
+    private var pendingAnnouncement: Task<Void, Never>?
     private var keyboardTapDetector = ModifierTapDetector()
 
     private enum KeyCode {
@@ -243,13 +246,19 @@ final class WheelController {
     fileprivate func setHoveredSlot(_ slot: Int?) {
         guard slot != hoveredSlot else { return }
         hoveredSlot = slot
+        pendingAnnouncement?.cancel()
         wheelView.highlightedSlot = slot
         navigationTimer?.invalidate()
         navigationTimer = nil
         guard let slot, let model else { return }
 
         NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
-        Announcer.say("\(model.items[slot].title), \(slot + 1) sur \(model.items.count)")
+        let spoken = "\(model.items[slot].title), \(slot + 1) sur \(model.items.count)"
+        pendingAnnouncement = Task { @MainActor in
+            try? await Task.sleep(for: Self.announcementDelay)
+            guard !Task.isCancelled else { return }
+            Announcer.say(spoken)
+        }
         if !keyboardMode, let navigation = navigation(for: model.items[slot]) {
             navigationTimer = Timer.scheduledTimer(withTimeInterval: Self.pagingDelay, repeats: false) { _ in
                 MainActor.assumeIsolated { self.navigate(navigation) }

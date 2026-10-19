@@ -248,7 +248,7 @@ private final class WheelCenterView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         name.font = .systemFont(ofSize: 11)
-        name.textColor = .secondaryLabelColor
+        name.textColor = .labelColor
         name.alignment = .center
         name.lineBreakMode = .byTruncatingMiddle
         count.font = .systemFont(ofSize: 11, weight: .semibold)
@@ -273,8 +273,9 @@ private final class WheelCenterView: NSView {
     func setFiles(_ files: [URL]) {
         guard let first = files.first else { return }
         icon.image = NSWorkspace.shared.icon(for: FileTypes.type(of: first))
-        name.stringValue = first.lastPathComponent
-        count.stringValue = files.count > 1 ? "×\(files.count)" : ""
+        // Several files: their number, not the first name ("Vacances ×3" read as copies).
+        name.stringValue = files.count > 1 ? "\(files.count)\u{00A0}éléments" : first.lastPathComponent
+        count.stringValue = ""
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -288,8 +289,8 @@ private final class WheelCenterView: NSView {
 
 // MARK: - Title
 
-/// "Convertir  ⇧ ⌘ ⌃" (or the open sub-wheel's title) in a small capsule above the ring; the current
-/// wheel's key is emphasised, the others are hints for switching.
+/// "Convertir   ⌘ Outils   ⌃ Actions" in a small capsule above the ring:
+/// the current wheel, then the keys of the others (a sub-wheel shows its title only).
 @MainActor
 final class WheelTitleView: NSView {
     static let height: CGFloat = 26
@@ -315,19 +316,20 @@ final class WheelTitleView: NSView {
     override func hitTest(_ point: NSPoint) -> NSView? { nil }
 
     func setMode(_ mode: WheelMode, title: String? = nil, triggers: TriggerMapping = .standard) {
+        let heading = title ?? mode.title
         let text = NSMutableAttributedString(
-            string: title ?? mode.title,
+            string: heading,
             attributes: [.font: NSFont.systemFont(ofSize: 12, weight: .semibold), .foregroundColor: NSColor.labelColor]
         )
-        for other in WheelMode.allCases {
-            let current = other == mode
-            text.append(NSAttributedString(
-                string: "  " + triggers.key(for: other).glyph,
-                attributes: [
-                    .font: NSFont.systemFont(ofSize: 11, weight: current ? .semibold : .regular),
-                    .foregroundColor: current ? NSColor.labelColor : NSColor.secondaryLabelColor,
-                ]
-            ))
+        // The other wheels, named, so the keys need not be remembered. A
+        // sub-wheel keeps its title alone: switching is rarely needed there.
+        if heading == mode.title {
+            for other in WheelMode.allCases where other != mode {
+                text.append(NSAttributedString(
+                    string: "   \(triggers.key(for: other).glyph)\u{00A0}\(other.title)",
+                    attributes: [.font: NSFont.systemFont(ofSize: 11), .foregroundColor: NSColor.secondaryLabelColor]
+                ))
+            }
         }
         // An attributed value ignores the field's own alignment.
         let centered = NSMutableParagraphStyle()

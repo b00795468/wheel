@@ -520,3 +520,18 @@ extension HUDToast {
 - [ ] verification-before-completion : tests, build, signature, CPU au repos, contrastes mesurés sur les nouveaux rendus (blanc sur #B8532F, indices inactifs, nom au centre, pastille).
 - [ ] Nouvelle critique Impeccable (deux évaluations isolées) pour mesurer l'écart avec 24/40 ; clôture de l'instantané traité (`critique-storage close`) si les priorités sont soldées.
 - [ ] CLAUDE.md (phase 7), commit, push, résumé + checklist manuelle (VoiceOver, Réduire les animations, survol de la pastille, clair/sombre).
+
+---
+
+### Task 6 : seconde passe après la critique 27/40 (`.impeccable/critique/2026-10-19T21-25-38Z__app.md`)
+
+Choix de Raphaël : corriger le P1 et les 5 P2 ; formats de la roue Convertir en libellés seuls.
+
+- [ ] **P1 onboarding sûr** — `PermissionRow(prominent:)` : bouton « Autoriser… » en style proéminent teinté de l'accent et action par défaut tant que l'Accessibilité manque ; pied de page de l'écran 2 : « Plus tard » (sans action par défaut) tant qu'elle manque. `finishOnboarding` : si l'Accessibilité manque, pastille cliquable « Pivot attend l’autorisation Accessibilité. Cliquez pour l’activer. » (ouvre `PermissionsManager.grantAccessibility`), sinon « Pivot est prêt… ». `HUDController.inform(_:symbol:action:)`, `JobQueue.inform(…action:)`, `GestureCoordinator.inform(…action:)`.
+- [ ] **P2 pastille** — succès avec fichiers : ligne principale « x créé » (1 ligne, troncature au milieu), seconde ligne secondaire « dans <dossier> », indice « Afficher » à droite ; aide VoiceOver selon l'action.
+- [ ] **P2 barre** — piste quasi invisible (`labelColor` 12 %) : le contraste utile devient celui du remplissage terracotta sur le fond de la pastille.
+- [ ] **P2 titre** — « Convertir   ⌘ Outils   ⌃ Actions » : titre courant en semi-gras, les autres roues nommées en secondaire ; pas d'indices dans une sous-roue (titre seul).
+- [ ] **P2 formats et centre** — tous les formats de Convertir en libellé seul (`symbol` vide) ; `WheelMode.symbol` et `FileOperation.displaySymbol` (repli pour la pastille) ; centre : « 3 éléments » pour plusieurs fichiers, nom en `labelColor`.
+- [ ] **P2 onboarding** — écrans 2 et 3 centrés verticalement ; touche de l'animation = touche de Convertir ; mini-pastille en rectangle arrondi comme la vraie.
+- [ ] **Mineur** — annonce VoiceOver du survol différée de 150 ms (une seule annonce quand le pointeur se pose) ; coche « Autorisé » en `.secondary`.
+- [ ] Tests (`displaySymbol`), build, rendus clair/sombre, commit.

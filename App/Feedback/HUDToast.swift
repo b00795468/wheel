@@ -45,10 +45,11 @@ final class HUDController {
         remove(toast, after: 0)
     }
 
-    /// A short notice that is not about a job (keyboard mode, onboarding).
-    func inform(_ message: String, symbol: String) {
+    /// A short notice that is not about a job (keyboard mode, onboarding);
+    /// with an `action`, clicking the pill runs it.
+    func inform(_ message: String, symbol: String, action: (() -> Void)? = nil) {
         let toast = HUDToast(onCancel: {})
-        toast.showSuccess(message: message, outputs: [], symbol: symbol)
+        toast.showSuccess(message: message, outputs: [], symbol: symbol, action: action)
         present(toast)
         Announcer.say(message)
         remove(toast, after: Self.noticeDuration)
@@ -102,6 +103,7 @@ final class HUDToast {
     private let content: HUDToastView
     private let onCancel: () -> Void
     private var outputs: [URL] = []
+    private var action: (() -> Void)?
     private(set) var isRunning = true
 
     var isHovered: Bool { content.isHovered }
@@ -133,13 +135,21 @@ final class HUDToast {
         content.setProgress(fraction)
     }
 
-    func showSuccess(message: String, outputs: [URL], symbol: String) {
+    /// Files: "x créé", where it went and a quiet "Afficher" cue. A notice
+    /// with an `action` is clickable too.
+    func showSuccess(message: String, outputs: [URL], symbol: String, action: (() -> Void)? = nil) {
         isRunning = false
         self.outputs = outputs
+        self.action = action
         let icon = outputs.first.map { NSWorkspace.shared.icon(forFile: $0.path) }
             ?? NSImage(systemSymbolName: symbol, accessibilityDescription: nil)
-        content.configure(icon: icon, tint: outputs.isEmpty ? .labelColor : nil, text: message, progress: nil,
-                          clickable: !outputs.isEmpty)
+        if let folder = outputs.first?.deletingLastPathComponent().lastPathComponent {
+            content.configure(icon: icon, tint: nil, text: message, progress: nil, clickable: true,
+                              detail: "dans \(folder)", trailing: "Afficher", hint: "Afficher dans le Finder")
+        } else {
+            content.configure(icon: icon, tint: .labelColor, text: message, progress: nil, clickable: action != nil,
+                              hint: action == nil ? nil : "Ouvrir les Réglages Système")
+        }
     }
 
     /// The triangle carries the meaning; the colour stays neutral (one accent only, §6).
@@ -177,6 +187,10 @@ final class HUDToast {
     }
 
     private func reveal() {
+        if let action {
+            action()
+            return
+        }
         guard !outputs.isEmpty else { return }
         NSWorkspace.shared.activateFileViewerSelecting(outputs)
     }
@@ -202,6 +216,8 @@ private final class HUDToastView: NSView {
     private let material = NSVisualEffectView()
     private let icon = NSImageView()
     private let label = NSTextField(wrappingLabelWithString: "")
+    private let detailLabel = NSTextField(labelWithString: "")
+    private let trailingLabel = NSTextField(labelWithString: "")
     private let bar = ProgressCapsule()
     private let cancelButton = NSButton()
 
@@ -222,6 +238,13 @@ private final class HUDToastView: NSView {
         label.lineBreakMode = .byWordWrapping
         label.cell?.truncatesLastVisibleLine = true
         label.setAccessibilityElement(false)
+        for secondary in [detailLabel, trailingLabel] {
+            secondary.font = .systemFont(ofSize: 11)
+            secondary.textColor = .secondaryLabelColor
+            secondary.lineBreakMode = .byTruncatingMiddle
+            secondary.setAccessibilityElement(false)
+        }
+        trailingLabel.alignment = .right
         cancelButton.image = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Annuler")
         cancelButton.toolTip = "Annuler"
         cancelButton.isBordered = false
@@ -230,36 +253,52 @@ private final class HUDToastView: NSView {
                                     width: Self.cancelSide, height: Self.cancelSide)
         cancelButton.target = self
         cancelButton.action = #selector(cancelPressed)
-        [icon, label, bar, cancelButton].forEach(addSubview)
+        [icon, label, detailLabel, trailingLabel, bar, cancelButton].forEach(addSubview)
         setAccessibilityElement(true)
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
 
-    /// `progress` nil hides the bar and the cancel button and lets the text use two lines.
-    func configure(icon image: NSImage?, tint: NSColor?, text: String, progress: Double?, clickable: Bool) {
+    /// `progress` nil hides the bar and the cancel button. A `detail` line
+    /// (where the file went) keeps the message on one line; without it the
+    /// message may use two. `trailing` is a quiet cue at the right edge.
+    func configure(icon image: NSImage?, tint: NSColor?, text: String, progress: Double?, clickable: Bool,
+                   detail: String? = nil, trailing: String? = nil, hint: String? = nil) {
         icon.image = image
         icon.contentTintColor = tint
         label.stringValue = text
+        detailLabel.stringValue = detail ?? ""
+        trailingLabel.stringValue = trailing ?? ""
+        detailLabel.isHidden = detail == nil
+        trailingLabel.isHidden = trailing == nil
         isClickable = clickable
         let running = progress != nil
         bar.isHidden = !running
         cancelButton.isHidden = !running
         bar.fraction = progress ?? 0
-        let width = bounds.width - Self.leading - (running ? 48 : 16)
+        let trailingWidth: CGFloat = trailing == nil ? 0 : 60
+        let width = bounds.width - Self.leading - (running ? 48 : 16) - trailingWidth
         if running {
             label.maximumNumberOfLines = 1
+            label.lineBreakMode = .byTruncatingMiddle
             label.frame = NSRect(x: Self.leading, y: 30, width: width, height: 16)
             bar.frame = NSRect(x: Self.leading, y: 20, width: width, height: 4)
+        } else if detail != nil {
+            label.maximumNumberOfLines = 1
+            label.lineBreakMode = .byTruncatingMiddle
+            label.frame = NSRect(x: Self.leading, y: 33, width: width, height: 16)
+            detailLabel.frame = NSRect(x: Self.leading, y: 16, width: width, height: 14)
         } else {
             label.maximumNumberOfLines = 2
+            label.lineBreakMode = .byWordWrapping
             let height = min(ceil(label.sizeThatFits(NSSize(width: width, height: 40)).height), 32)
             label.frame = NSRect(x: Self.leading, y: (bounds.height - height) / 2, width: width, height: height)
         }
-        setAccessibilityLabel(text)
+        trailingLabel.frame = NSRect(x: bounds.width - 16 - 52, y: (bounds.height - 14) / 2, width: 52, height: 14)
+        setAccessibilityLabel(detail.map { "\(text), \($0)" } ?? text)
         setAccessibilityRole(clickable ? .button : .staticText)
-        setAccessibilityHelp(clickable ? "Afficher dans le Finder" : nil)
+        setAccessibilityHelp(hint)
     }
 
     func setProgress(_ fraction: Double) {
@@ -308,7 +347,8 @@ private final class ProgressCapsule: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         let radius = bounds.height / 2
-        NSColor.quaternaryLabelColor.setFill()
+        // A faint track: what must read is the terracotta fill against the pill.
+        NSColor.labelColor.withAlphaComponent(0.12).setFill()
         NSBezierPath(roundedRect: bounds, xRadius: radius, yRadius: radius).fill()
         let width = bounds.width * min(max(fraction, 0), 1)
         guard width > 0 else { return }

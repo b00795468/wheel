@@ -58,6 +58,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settings.refreshPermissions()
         onboardingWindow?.close()
         onboardingWindow = nil
+        guard PermissionsManager.isAccessibilityTrusted else {
+            // Never say "ready" when the gesture cannot work yet.
+            gestures.inform("\(AppInfo.name) attend l’autorisation Accessibilité. Cliquez ici pour l’activer.",
+                            symbol: "lock", action: PermissionsManager.grantAccessibility)
+            return
+        }
         let key = SettingsStore.triggers.key(for: .convert).name
         gestures.inform("\(AppInfo.name) est prêt\u{202F}: glissez un fichier, puis appuyez brièvement sur \(key).",
                         symbol: "checkmark.circle")
